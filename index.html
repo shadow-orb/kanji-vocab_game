@@ -298,7 +298,7 @@
     const sets = currentCategory === "kanji" ? kanjiSets : vocabSets;
     container.innerHTML += `<label><input type="checkbox" id="all" onchange="toggleAll(this)"> All</label>`;
     Object.keys(sets).forEach((key, i) => {
-      const label = currentCategory === "kanji" ? `N4_Week ${i+2}` : `Lesson ${i+26}`;
+      const label = currentCategory === "kanji" ? `N4_Week ${i+1}` : `Lesson ${i+26}`;
       container.innerHTML += `<label><input type="checkbox" class="setBox" value="${key}"> ${label}</label>`;
     });
   }
@@ -409,5 +409,6 @@
 </script>
 </body>
 </html>
+
 
 
