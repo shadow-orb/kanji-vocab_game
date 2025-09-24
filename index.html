@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanji & Vocabulary Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(to bottom, #b179b9, #b179b9);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: rgb(214, 169, 56);
+      color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      margin: 10px;
+      min-width: 150px;
+    }
+
+    .choice-btn {
+      background-color: white;
+      color: black;
+      border: 2px solid black;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .kanji {
+      font-size: 6em;
+      margin: 20px;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .choice-option {
+      background-color: white;
+      color: black;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 8px 15px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .choice-option:hover {
+      background-color: #f0f0f0;
+    }
+
+    .score, .feedback {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Kanji & Vocabulary Quiz</h1>
+
+  <!-- Choice Screen -->
+  <div id="choiceScreen">
+    <button class="btn choice-btn" onclick="selectCategory('kanji')">Kanji</button>
+    <button class="btn choice-btn" onclick="selectCategory('vocab')">Vocabulary</button>
+  </div>
+
+  <!-- Checkbox Screen -->
+  <div id="checkboxScreen" class="hidden">
+    <div id="checkboxContainer" class="checkbox-group"></div>
+    <button class="btn" onclick="startFromCheckbox()">Start</button>
+    <button class="btn" onclick="goBackToChoice()">Back</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="hidden">
+    <div class="kanji" id="kanji">?</div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="score" id="score">Score: 0</div>
+    <button class="btn" onclick="resetGame()">Restart</button>
+    <button class="btn" onclick="goBackToCheckboxes()">Back</button>
+  </div>
+
+<script>
+  const kanjiSets = {
+    kanji1: [
+      { kanji: "短い", reading: "みじかい" },
+      { kanji: "短大", reading: "たんだい" }
+    ],
+    kanji2: [
+      { kanji: "短時間", reading: "たんじかん" },
+      { kanji: "低い", reading: "ひくい" }
+    ],
+    kanji3: [
+      { kanji: "長い", reading: "ながい" },
+      { kanji: "泳ぐ", reading: "およぐ" }
+    ]
+  };
+
+  const vocabSets = {
+    vocab1: [
+{ kanji: "短い", reading: "みじかい" },
+{ kanji: "短大", reading: "たんだい" },
+{ kanji: "短時間", reading: "たんじかん" },
+{ kanji: "低い", reading: "ひくい" },
+{ kanji: "低下する", reading: "ていかする" },
+{ kanji: "低温", reading: "ていおん" },
+{ kanji: "教える", reading: "おしえる" },
+{ kanji: "教会", reading: "きょうかい" },
+{ kanji: "教育する", reading: "きょういくする" },
+{ kanji: "教室", reading: "きょうしつ" },
+{ kanji: "朝", reading: "あさ" },
+{ kanji: "朝日", reading: "あさひ" },
+{ kanji: "朝食", reading: "ちょうしょく" },
+{ kanji: "昼", reading: "ひる" },
+{ kanji: "昼寝", reading: "ひるね" },
+{ kanji: "昼食", reading: "ちゅうしょく" },
+{ kanji: "昼休み", reading: "ひるやすみ" },
+{ kanji: "夜", reading: "よる" },
+{ kanji: "夜食", reading: "やしょく" },
+{ kanji: "今夜", reading: "こんや" },
+{ kanji: "晩", reading: "ばん" },
+{ kanji: "今晩", reading: "こんばん" },
+{ kanji: "晩御飯", reading: "ばんごはん" },
+{ kanji: "毎日", reading: "まいにち" },
+{ kanji: "毎週", reading: "まいしゅう" },
+{ kanji: "毎月", reading: "まい (つき/げつ)" },
+{ kanji: "来週", reading: "らいしゅう" },
+{ kanji: "週末", reading: "しゅうまつ" },
+{ kanji: "先週", reading: "せんしゅう" },
+{ kanji: "一週間", reading: "いっしゅうかん" },
+{ kanji: "月曜日", reading: "げつようび" },
+{ kanji: "火曜日", reading: "かようび" },
+{ kanji: "水曜日", reading: "すいようび" },
+{ kanji: "木曜日", reading: "もくようび" }
+    ],
+    vocab2: [
+{ kanji: "作る", reading: "つくる" },
+{ kanji: "作文", reading: "さくぶん" },
+{ kanji: "作品", reading: "さくひん" },
+{ kanji: "動作", reading: "どうさ" },
+{ kanji: "泳ぐ", reading: "およぐ" },
+{ kanji: "水泳", reading: "すいえい" },
+{ kanji: "油", reading: "あぶら" },
+{ kanji: "油絵", reading: "あぶらえ" },
+{ kanji: "石油", reading: "せきゆ" },
+{ kanji: "海", reading: "うみ" },
+{ kanji: "海外", reading: "かいがい" },
+{ kanji: "日本海", reading: "にほんかい" },
+{ kanji: "海水", reading: "かいすい" },
+{ kanji: "酒", reading: "さけ" },
+{ kanji: "日本酒", reading: "にほんしゅ" },
+{ kanji: "酒屋", reading: "さかや" },
+{ kanji: "洋酒", reading: "ようしゅ" },
+{ kanji: "待つ", reading: "まつ" },
+{ kanji: "待合室", reading: "まちあいしつ" },
+{ kanji: "招待する", reading: "しょうたいする" },
+{ kanji: "学校", reading: "がっこう" },
+{ kanji: "校長", reading: "こうちょう" },
+{ kanji: "高校生", reading: "こうこうせい" },
+{ kanji: "言う", reading: "いう" },
+{ kanji: "言葉", reading: "ことば" },
+{ kanji: "言語", reading: "げんご" },
+{ kanji: "伝言", reading: "でんごん" }
+    ],
+    vocab3: [
+{ kanji: "時計", reading: "とけい" },
+{ kanji: "計画する", reading: "けいかくする" },
+{ kanji: "体温計", reading: "たいおんけい" },
+{ kanji: "日本語", reading: "にほんご" },
+{ kanji: "英語", reading: "えいご" },
+{ kanji: "物語", reading: "ものがたり" },
+{ kanji: "ご飯", reading: "ごはん" },
+{ kanji: "飯", reading: "めし" },
+{ kanji: "夕飯", reading: "ゆうはん" },
+{ kanji: "お宅", reading: "おたく" },
+{ kanji: "住宅", reading: "じゅうたく" },
+{ kanji: "自宅", reading: "じたく" },
+{ kanji: "帰宅する", reading: "きたくする" },
+{ kanji: "客", reading: "きゃく" },
+{ kanji: "乗客", reading: "じょうきゃく" },
+{ kanji: "教室", reading: "きょうしつ" },
+{ kanji: "室内", reading: "しつない" },
+{ kanji: "研究室", reading: "けんきゅうしつ" },
+{ kanji: "家", reading: "いえ" },
+{ kanji: "大家", reading: "おおや" },
+{ kanji: "家族", reading: "かぞく" }
+    ],
+    vocab4: [
+{ kanji: "英国", reading: "えいこく" },
+{ kanji: "英語", reading: "えいご" },
+{ kanji: "英和辞典", reading: "えいわじてん" },
+{ kanji: "薬", reading: "くすり" },
+{ kanji: "薬屋", reading: "くすりや" },
+{ kanji: "目薬", reading: "めぐすり" },
+{ kanji: "薬局", reading: "やっきょく" },
+{ kanji: "会う", reading: "あう" },
+{ kanji: "会話", reading: "かいわ" },
+{ kanji: "会社", reading: "かいしゃ" },
+{ kanji: "今", reading: "いま" },
+{ kanji: "今月", reading: "こんげつ" },
+{ kanji: "今年", reading: "ことし" },
+{ kanji: "今日", reading: "きょう" },
+{ kanji: "雪", reading: "ゆき" },
+{ kanji: "雪国", reading: "ゆきぐに" },
+{ kanji: "曇", reading: "くも" },
+{ kanji: "電気", reading: "でんき" },
+{ kanji: "電話", reading: "でんわ" },
+{ kanji: "電車", reading: "でんしゃ" },
+{ kanji: "売る", reading: "うる" },
+{ kanji: "売店", reading: "ばいてん" },
+{ kanji: "売り場", reading: "うりば" }
+    ],
+    vocab5: [
+{ kanji: "広い", reading: "ひろい" },
+{ kanji: "広島", reading: "ひろしま" },
+{ kanji: "広さ", reading: "ひろさ" },
+{ kanji: "広告", reading: "こうこく" },
+{ kanji: "店", reading: "みせ" },
+{ kanji: "書店", reading: "しょてん" },
+{ kanji: "店員", reading: "てんいん" },
+{ kanji: "本店", reading: "ほんてん" },
+{ kanji: "一度", reading: "いちど" },
+{ kanji: "温度", reading: "おんど" },
+{ kanji: "今度", reading: "こんど" },
+{ kanji: "速度", reading: "そくど" },
+{ kanji: "病気", reading: "びょうき" },
+{ kanji: "病院", reading: "びょういん" },
+{ kanji: "病人", reading: "びょうにん" },
+{ kanji: "疲れる", reading: "つかれる" },
+{ kanji: "疲れ", reading: "つかれ" },
+{ kanji: "痛い", reading: "いたい" },
+{ kanji: "痛み止め", reading: "いたみどめ" },
+{ kanji: "痛む", reading: "いたむ" },
+{ kanji: "頭痛", reading: "ずつう" }
+    ]
+  };
+
+  let mainArray = [];
+  let currentCategory = "";
+  let score = 0;
+  let answered = [];
+  let shuffledQuestions = [];
+  let currentQuestion = {};
+
+  function selectCategory(category) {
+    currentCategory = category;
+    document.getElementById("choiceScreen").classList.add("hidden");
+    document.getElementById("checkboxScreen").classList.remove("hidden");
+    buildCheckboxes();
+  }
+
+  function buildCheckboxes() {
+    const container = document.getElementById("checkboxContainer");
+    container.innerHTML = "";
+    const sets = currentCategory === "kanji" ? kanjiSets : vocabSets;
+    container.innerHTML += `<label><input type="checkbox" id="all" onchange="toggleAll(this)"> All</label>`;
+    Object.keys(sets).forEach((key, i) => {
+      const label = currentCategory === "kanji" ? `N4_Week ${i+2}` : `Lesson ${i+26}`;
+      container.innerHTML += `<label><input type="checkbox" class="setBox" value="${key}"> ${label}</label>`;
+    });
+  }
+
+  function toggleAll(allBox) {
+    document.querySelectorAll(".setBox").forEach(cb => cb.checked = allBox.checked);
+  }
+
+  function buildMainArray() {
+    mainArray = [];
+    const sets = currentCategory === "kanji" ? kanjiSets : vocabSets;
+    document.querySelectorAll(".setBox:checked").forEach(cb => {
+      mainArray.push(...sets[cb.value]);
+    });
+  }
+
+  function startFromCheckbox() {
+    buildMainArray();
+    if (mainArray.length === 0) {
+      alert("Please select at least one option!");
+      return;
+    }
+    document.getElementById("checkboxScreen").classList.add("hidden");
+    document.getElementById("gameScreen").classList.remove("hidden");
+    resetGame();
+  }
+
+  function resetGame() {
+    score = 0;
+    answered = [];
+    shuffledQuestions = shuffle([...mainArray]);
+    document.getElementById("score").textContent = `Score: ${score}`;
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("kanji").textContent = "?";
+    pickQuestion();
+  }
+
+  function pickQuestion() {
+    if (answered.length === mainArray.length) {
+      document.getElementById("kanji").textContent = "🎉";
+      document.getElementById("choices").innerHTML = "";
+      document.getElementById("feedback").textContent = "Congratulations! You answered all correctly!";
+      return;
+    }
+
+    if (shuffledQuestions.length === 0) {
+      shuffledQuestions = shuffle(mainArray.filter(k => !answered.includes(k.kanji)));
+    }
+
+    currentQuestion = shuffledQuestions.pop();
+    document.getElementById("kanji").textContent = currentQuestion.kanji;
+
+    const otherReadings = shuffle(mainArray.filter(k => k.reading !== currentQuestion.reading));
+    const options = shuffle([
+      currentQuestion.reading,
+      otherReadings[0]?.reading || currentQuestion.reading,
+      otherReadings[1]?.reading || currentQuestion.reading
+    ]);
+
+    const choicesDiv = document.getElementById("choices");
+    choicesDiv.innerHTML = "";
+    options.forEach(option => {
+      const btn = document.createElement("button");
+      btn.textContent = option;
+      btn.classList.add("choice-option");
+      btn.onclick = () => checkAnswer(option);
+      choicesDiv.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(answer) {
+    const feedback = document.getElementById("feedback");
+    if (answer === currentQuestion.reading) {
+      score++;
+      if (!answered.includes(currentQuestion.kanji)) answered.push(currentQuestion.kanji);
+      feedback.textContent = "Correct!";
+      document.getElementById("score").textContent = `Score: ${score}`;
+      setTimeout(() => {
+        feedback.textContent = "";
+        pickQuestion();
+      }, 500); // ✅ 0.5s for correct
+    } else {
+      feedback.textContent = `Wrong! Correct was: ${currentQuestion.reading}`;
+      setTimeout(() => {
+        feedback.textContent = "";
+        pickQuestion();
+      }, 1000); // ✅ 1s for wrong
+    }
+  }
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function goBackToCheckboxes() {
+    document.getElementById("gameScreen").classList.add("hidden");
+    document.getElementById("checkboxScreen").classList.remove("hidden");
+  }
+
+  function goBackToChoice() {
+    document.getElementById("checkboxScreen").classList.add("hidden");
+    document.getElementById("choiceScreen").classList.remove("hidden");
+  }
+</script>
+</body>
+</html>
