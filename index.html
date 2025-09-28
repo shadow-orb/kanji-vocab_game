@@ -46,20 +46,39 @@
       display: none;
     }
 
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-      color: white;
-      font-size: 1.2em;
-    }
+.checkbox-group {
+  display: grid; /* ✅ was flex */
+  grid-template-columns: repeat(5, 1fr); /* ✅ 5 equal columns */
+  gap: 10px;
+  margin-bottom: 20px;
+  color: white;
+  font-size: 1.2em;
+  justify-items: center;
+}
 
-    .kanji {
-      font-size: 6em;
-      margin: 20px;
-      color: #fff;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+/* ✅ NEW: Center the "All" checkbox above columns */
+.checkbox-all {
+  grid-column: 1 / -1;
+  justify-self: center;
+  font-weight: bold;
+}
+
+
+   .kanji {
+  font-size: 6em;
+  margin: 20px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  /* ✅ NEW: allow long text to wrap nicely */
+  max-width: 90%;
+  word-wrap: break-word;
+  white-space: normal;
+  text-align: center;
+}
+
+    .vocab-question {
+      font-size: 1.5em; /* ✅ 200% smaller than kanji */
     }
 
     .choices {
@@ -88,26 +107,51 @@
       font-size: 1.2em;
       color: white;
     }
+
+    /* ✅ Style for checkbox grid */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 columns */
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto; /* center the grid */
+  text-align: left;
+}
+
+.all-checkbox {
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
   </style>
 </head>
 <body>
 
   <h1>Kanji & Vocabulary Quiz</h1>
 
-  <!-- Choice Screen -->
-  <div id="choiceScreen">
-    <button class="btn choice-btn" onclick="selectCategory('kanji')">Kanji</button>
-    <button class="btn choice-btn" onclick="selectCategory('vocab')">Vocabulary</button>
+  <!-- Step 0: JLPT Level Selection -->
+  <div id="levelScreen">
+    <button class="btn choice-btn" onclick="selectLevel('n5')">N5</button>
+    <button class="btn choice-btn" onclick="selectLevel('n4')">N4</button>
+    <button class="btn choice-btn" onclick="selectLevel('n3')">N3</button>
   </div>
 
-  <!-- Checkbox Screen -->
+  <!-- Step 1: Category Selection -->
+  <div id="choiceScreen" class="hidden">
+    <button class="btn choice-btn" onclick="selectCategory('kanji')">Kanji</button>
+    <button class="btn choice-btn" onclick="selectCategory('vocab')">Vocabulary</button>
+    <button class="btn" onclick="goBackToLevel()">Back</button>
+  </div>
+
+  <!-- Step 2: Checkbox Screen -->
   <div id="checkboxScreen" class="hidden">
     <div id="checkboxContainer" class="checkbox-group"></div>
     <button class="btn" onclick="startFromCheckbox()">Start</button>
     <button class="btn" onclick="goBackToChoice()">Back</button>
   </div>
 
-  <!-- Game Screen -->
+  <!-- Step 3: Game Screen -->
   <div id="gameScreen" class="hidden">
     <div class="kanji" id="kanji">?</div>
     <div class="choices" id="choices"></div>
@@ -118,7 +162,1100 @@
   </div>
 
 <script>
-  const kanjiSets = {
+  // ✅ Data organized by level -> category
+  const data = {
+    n5: {
+      kanjiSets: {
+        kanji1: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
+        kanji2: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
+        kanji3: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
+        kanji4: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
+        kanji5: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
+        kanji6: [{ kanji: "山", reading: "やま" }, { kanji: "川", reading: "かわ" }]
+      },
+      vocabSets: {
+        vocab1: [
+{ kanji: "I", reading: "わたし" },
+{ kanji: "you", reading: "あなた" },
+{ kanji: "that person, he, she", reading: "あのひと" },
+{ kanji: "the polite equivalent of あのひと", reading: "あのかた" },
+{ kanji: "Mr., Ms. (suffix added to a name for expressing politeness)", reading: "～さん" },
+{ kanji: " (suffix often added to a child’s name instead of ～さん)", reading: "～ちゃん" },
+{ kanji: " (suffix meaning ’a national of’)", reading: "～じん" },
+{ kanji: "e.g. アメリカじん, an American", reading: "～人" },
+{ kanji: "teacher, instructor (not used when referring to one’s own job)", reading: "せんせい" },
+{ kanji: "teacher, instructor", reading: "きょうし" },
+{ kanji: "student", reading: "がくせい" },
+{ kanji: "company employee", reading: "かいしゃいん" },
+{ kanji: "employee of ～ company (used with a company’s name, e.g. IMC の しゃいん)", reading: "しゃいん" },
+{ kanji: "bank employee", reading: "ぎんこういん" },
+{ kanji: "doctor", reading: "いしゃ" },
+{ kanji: "researcher, scholar", reading: "けんきゅうしゃ" },
+{ kanji: "university", reading: "だいがく" },
+{ kanji: "hospital", reading: "びょういん" },
+{ kanji: "who", reading: "だれ" },
+{ kanji: "どなた is the polite equivalent of だれ", reading: "どなた" },
+{ kanji: "～ years old", reading: "～さい" },
+{ kanji: "how old", reading: "なんさい" },
+{ kanji: "おいくつ is the polite equivalent of なんさい", reading: "おいくつ" },
+{ kanji: "yes", reading: "はい" },
+{ kanji: "no", reading: "いいえ" },
+{ kanji: "How do you do? (Usually used as the first phrase when introducing oneself.)", reading: "はじめまして。" },
+{ kanji: "I’m from   (country).", reading: "～からきました。" },
+{ kanji: "Pleased to meet you. (Usually used at the end of a self-introduction.)", reading: "どうぞ よろしく" },
+{ kanji: "Excuse me, but (used when asking someone for personal)", reading: "しつれいですが" },
+{ kanji: "May I have your name?", reading: "おなまえは?" },
+{ kanji: "This is Mr./Ms. ～.", reading: "こちらは ～さんです。" },
+{ kanji: "U.S.A.", reading: "アメリカ" },
+{ kanji: "U.K.", reading: "イギリス" },
+{ kanji: "India", reading: "インド" },
+{ kanji: "Indonesia", reading: "インドネシア" },
+{ kanji: "South Korea", reading: "かんこく" },
+{ kanji: "Thailand", reading: "タイ" },
+{ kanji: "China", reading: "ちゅうごく" },
+{ kanji: "Germany", reading: "ドイツ" },
+{ kanji: "Japan", reading: "にほん" },
+{ kanji: "Brazil", reading: "ブラジル" },
+],
+        vocab2: [
+{ kanji: "this (thing here)", reading: "これ" },
+{ kanji: "that (thing near the listener)", reading: "それ" },
+{ kanji: "that (thing over there)", reading: "あれ" },
+{ kanji: "this ～, this ～ here", reading: "この～" },
+{ kanji: "that ～, that ～ near the listener", reading: "その～" },
+{ kanji: "that ～, that ～ over there", reading: "あの～" },
+{ kanji: "book", reading: "ほん" },
+{ kanji: "dictionary", reading: "じしょ" },
+{ kanji: "magazine", reading: "ざっし" },
+{ kanji: "newspaper", reading: "しんぶん" },
+{ kanji: "notebook", reading: "ノート" },
+{ kanji: "personal organiser", reading: "てちょう" },
+{ kanji: "business card", reading: "めいし" },
+{ kanji: "credit card", reading: "カード" },
+{ kanji: "pencil", reading: "えんぴつ" },
+{ kanji: "ballpoint pen", reading: "ボールペン" },
+{ kanji: "mechanical pencil, propelling pencil", reading: "シャープペンシル" },
+{ kanji: "key", reading: "かぎ" },
+{ kanji: "watch, clock", reading: "とけい" },
+{ kanji: "umbrella", reading: "かさ" },
+{ kanji: "bag, briefcase", reading: "かばん" },
+{ kanji: "CD, compact disc", reading: "CD" },
+{ kanji: "television", reading: "テレビ" },
+{ kanji: "radio", reading: "ラジオ" },
+{ kanji: "camera", reading: "カメラ" },
+{ kanji: "computer", reading: "コンピューター" },
+{ kanji: "car, vehicle", reading: "くるま" },
+{ kanji: "desk", reading: "つくえ" },
+{ kanji: "chair", reading: "いす" },
+{ kanji: "chocolate", reading: "チョコレート" },
+{ kanji: "coffee", reading: "コーヒー" },
+{ kanji: "souvenir, present", reading: "おみやげ" },
+{ kanji: "the English language", reading: "えいご" },
+{ kanji: "the Japanese language", reading: "にほんご" },
+{ kanji: "～ language", reading: "～ご" },
+{ kanji: "what", reading: "なん" },
+{ kanji: "so", reading: "そう" },
+{ kanji: "Er... (used to show hesitation)", reading: "あのう" },
+{ kanji: "Oh? What! (used when hearing something unexpected)", reading: "えっ" },
+{ kanji: "Here you are. (used when offering someone something)", reading: "どうぞ。" },
+{ kanji: "Thank you (very much).", reading: "ありがとう" },
+{ kanji: "I see.", reading: "そうですか。" },
+{ kanji: "No, it isn’t./You are wrong.", reading: "ちがいます。" },
+{ kanji: "Oh! (used when becoming aware of something)", reading: "あ" },
+{ kanji: "Thank you in advance for your kindness.", reading: "これから おせわになります。" },
+{ kanji: "Pleased to meet you, too. (response to よろしく)", reading: "こちらこそ よろしく" }
+],
+        vocab3: [
+{ kanji: "here, this place", reading: "ここ" },
+{ kanji: "there, that place near the listener", reading: "そこ" },
+{ kanji: "that place over there", reading: "あそこ" },
+{ kanji: "where, what place", reading: "どこ" },
+{ kanji: "this way, this place (polite equivalent of ここ)", reading: "こちら" },
+{ kanji: "that way, that place near the listener (polite equivalent of そこ)", reading: "そちら" },
+{ kanji: "that way, that place over there (polite equivalent of あそこ)", reading: "あちら" },
+{ kanji: "which way, where (polite equivalent of どこ)", reading: "どちら" },
+{ kanji: "classroom", reading: "きょうしつ" },
+{ kanji: "dining hall, canteen", reading: "しょくどう" },
+{ kanji: "office", reading: "じむしょ" },
+{ kanji: "conference room, meeting room", reading: "かいぎしつ" },
+{ kanji: "reception desk", reading: "うけつけ" },
+{ kanji: "lobby", reading: "ロビー" },
+{ kanji: "room", reading: "へや" },
+{ kanji: "toilet, rest room", reading: "トイレ" },
+{ kanji: "toilet, rest room", reading: "おてあらい" },
+{ kanji: "staircase", reading: "かいだん" },
+{ kanji: "lift, elevator", reading: "エレベーター" },
+{ kanji: "escalator", reading: "エスカレーター" },
+{ kanji: "vending machine", reading: "じどうはんばいき" },
+{ kanji: "telephone handset, telephone call", reading: "でんわ" },
+{ kanji: "country", reading: "くに" },
+{ kanji: "company", reading: "かいしゃ" },
+{ kanji: "house, home", reading: "うち" },
+{ kanji: "shoes", reading: "くつ" },
+{ kanji: "tie, necktie", reading: "ネクタイ" },
+{ kanji: "wine", reading: "ワイン" },
+{ kanji: "department, counter (in a department store, etc.)", reading: "うりば" },
+{ kanji: "basement", reading: "ちか" },
+{ kanji: "～th floor", reading: "～かい" },
+{ kanji: "what floor", reading: "なんがい" },
+{ kanji: "～ yen", reading: "～えん" },
+{ kanji: "how much", reading: "いくら" },
+{ kanji: "hundred", reading: "ひゃく" },
+{ kanji: "thousand", reading: "せん" },
+{ kanji: "ten thousand", reading: "まん" },
+{ kanji: "Excuse me.", reading: "すみません。" },
+{ kanji: "Thanks.", reading: "どうも。" },
+{ kanji: "Welcome./May I help you? (a greeting to a customer)", reading: "いらっしゃいませ。" },
+{ kanji: "Please show me [～].", reading: "～をみせて ください。" },
+{ kanji: "well, then, in that case", reading: "じゃ" },
+{ kanji: "Give me [～], please.", reading: "～をください。" },
+{ kanji: "Italy", reading: "イタリア" },
+{ kanji: "Switzerland", reading: "スイス" },
+{ kanji: "France", reading: "フランス" },
+{ kanji: "Jakarta", reading: "ジャカルタ" },
+{ kanji: "Bangkok", reading: "バンコク" },
+{ kanji: "Berlin", reading: "ベルリン" }
+],
+        vocab4: [
+{ kanji: "get up, wake up", reading: "おきます" },
+{ kanji: "sleep, go to bed", reading: "ねます" },
+{ kanji: "work", reading: "はたらきます" },
+{ kanji: "take a rest, take a holiday", reading: "やすみます" },
+{ kanji: "study", reading: "べんきょうします" },
+{ kanji: "finish", reading: "おわります" },
+{ kanji: "department store", reading: "デパート" },
+{ kanji: "bank", reading: "ぎんこう" },
+{ kanji: "post office", reading: "ゆうびんきょく" },
+{ kanji: "library", reading: "としょかん" },
+{ kanji: "art museum, art gallery", reading: "びじゅつかん" },
+{ kanji: "now", reading: "いま" },
+{ kanji: "～ o’clock", reading: "～じ" },
+{ kanji: "～ minute", reading: "～ふん" },
+{ kanji: "～ minute", reading: "～ぷん" },
+{ kanji: "half", reading: "はん" },
+{ kanji: "what time", reading: "なんじ" },
+{ kanji: "what minute", reading: "なんぷん" },
+{ kanji: "a.m., morning", reading: "ごぜん" },
+{ kanji: "p.m., afternoon", reading: "ごご" },
+{ kanji: "morning", reading: "あさ" },
+{ kanji: "daytime, noon", reading: "ひる" },
+{ kanji: "night, evening", reading: "ばん" },
+{ kanji: "night, evening", reading: "よる" },
+{ kanji: "the day before yesterday", reading: "おととい" },
+{ kanji: "yesterday", reading: "きのう" },
+{ kanji: "today", reading: "きょう" },
+{ kanji: "tomorrow", reading: "あした" },
+{ kanji: "the day after tomorrow", reading: "あさって" },
+{ kanji: "this morning", reading: "けさ" },
+{ kanji: "this evening, tonight", reading: "こんばん" },
+{ kanji: "rest, a holiday, a day off", reading: "やすみ" },
+{ kanji: "lunchtime", reading: "ひるやすみ" },
+{ kanji: "examination, test", reading: "しけん" },
+{ kanji: "meeting, conference", reading: "かいぎ" },
+{ kanji: "hold a meeting", reading: "～をします" },
+{ kanji: "film, movie", reading: "えいが" },
+{ kanji: "every morning", reading: "まいあさ" },
+{ kanji: "every night", reading: "まいばん" },
+{ kanji: "every day", reading: "まいにち" },
+{ kanji: "Monday", reading: "げつようび" },
+{ kanji: "Tuesday", reading: "かようび" },
+{ kanji: "Wednesday", reading: "すいようび" },
+{ kanji: "Thursday", reading: "もくようび" },
+{ kanji: "Friday", reading: "きんようび" },
+{ kanji: "Saturday", reading: "どようび" },
+{ kanji: "Sunday", reading: "にちようび" },
+{ kanji: "what day of the week", reading: "なんようび" },
+{ kanji: "from～", reading: "～から" },
+{ kanji: "up to～, until～", reading: "～まで" },
+{ kanji: "and (used to connect nouns)", reading: "～と～" },
+{ kanji: "That’s tough, isn’t it? (used when expressing sympathy)", reading: "たいへんですね。" },
+{ kanji: "number", reading: "ばんごう" },
+{ kanji: "what number", reading: "なんばん" },
+{ kanji: "your place", reading: "そちら" },
+{ kanji: "New York", reading: "ニューヨーク" },
+{ kanji: "Beijing", reading: "ペキン" },
+{ kanji: "Los Angeles", reading: "ロサンゼルス" },
+{ kanji: "London", reading: "ロンドン" }
+        ],
+        vocab5: [
+{ kanji: "go", reading: "いきます" },
+{ kanji: "come", reading: "きます" },
+{ kanji: "go home, return", reading: "かえります" },
+{ kanji: "school", reading: "がっこう" },
+{ kanji: "supermarket", reading: "スーパー" },
+{ kanji: "station", reading: "えき" },
+{ kanji: "aeroplane, airplane", reading: "ひこうき" },
+{ kanji: "ship", reading: "ふね" },
+{ kanji: "electric train", reading: "でんしゃ" },
+{ kanji: "underground, subway", reading: "ちかてつ" },
+{ kanji: "the Shinkansen, the bullet train", reading: "しんかんせん" },
+{ kanji: "bus", reading: "バス" },
+{ kanji: "taxi", reading: "タクシー" },
+{ kanji: "bicycle", reading: "じてんしゃ" },
+{ kanji: "on foot", reading: "あるいて" },
+{ kanji: "person, people", reading: "ひと" },
+{ kanji: "friend", reading: "ともだち" },
+{ kanji: "he, boyfriend, lover", reading: "かれ" },
+{ kanji: "she, girlfriend, lover", reading: "かのじょ" },
+{ kanji: "family", reading: "かぞく" },
+{ kanji: "alone, by oneself", reading: "ひとりで" },
+{ kanji: "last week", reading: "せんしゅう" },
+{ kanji: "this week", reading: "こんしゅう" },
+{ kanji: "next week", reading: "らいしゅう" },
+{ kanji: "last month", reading: "せんげつ" },
+{ kanji: "this month", reading: "こんげつ" },
+{ kanji: "next month", reading: "らいげつ" },
+{ kanji: "last year", reading: "きょねん" },
+{ kanji: "this year", reading: "ことし" },
+{ kanji: "next year", reading: "らいねん" },
+{ kanji: "～th year", reading: "～ねん" },
+{ kanji: "what year", reading: "なんねん" },
+{ kanji: "～th month of the year", reading: "～がつ" },
+{ kanji: "what month", reading: "なんがつ" },
+{ kanji: "first day of the month", reading: "ついたち" },
+{ kanji: "second, two days", reading: "ふつか" },
+{ kanji: "third, three days", reading: "みっか" },
+{ kanji: "fourth, four days", reading: "よっか" },
+{ kanji: "fifth, five days", reading: "いつか" },
+{ kanji: "sixth, six days", reading: "むいか" },
+{ kanji: "seventh, seven days", reading: "なのか" },
+{ kanji: "eighth, eight days", reading: "ようか" },
+{ kanji: "ninth, nine days", reading: "ここのか" },
+{ kanji: "tenth, ten days", reading: "とおか" },
+{ kanji: "fourteenth, fourteen days", reading: "じゅうよっか" },
+{ kanji: "twentieth, twenty days", reading: "はつか" },
+{ kanji: "twenty-fourth, twenty-four days", reading: "にじゅうよっか" },
+{ kanji: "～th day of the month, ～ day(s)", reading: "～にち" },
+{ kanji: "which day of the month, how many days", reading: "なんにち" },
+{ kanji: "when", reading: "いつ" },
+{ kanji: "birthday", reading: "たんじょうび" },
+{ kanji: "Yes, it is.", reading: "そうですね。" },
+{ kanji: "Thank you very much.", reading: "ありがとう ございました。" },
+{ kanji: "You’re welcome./Don’t mention it.", reading: "どういたしまして。" },
+{ kanji: "platform ～, ～th platform", reading: "ばんせん" },
+{ kanji: "next", reading: "つぎの" },
+{ kanji: "local (train)", reading: "ふつう" },
+{ kanji: "rapid", reading: "きゅうこう" },
+{ kanji: "express", reading: "とっきゅう" },
+{ kanji: "Osaka Castle, a famous castle in Osaka", reading: "おおさかじょう" }
+        ],
+        vocab6: [
+{ kanji: "eat", reading: "たべます" },
+{ kanji: "drink", reading: "のみます" },
+{ kanji: "smoke", reading: "すいます" },
+{ kanji: "see, look at, watch", reading: "みます" },
+{ kanji: "hear, listen", reading: "ききます" },
+{ kanji: "read", reading: "よみます" },
+{ kanji: "write (or paint)", reading: "かきます" },
+{ kanji: "buy", reading: "かいます" },
+{ kanji: "take a photograph", reading: "とります" },
+{ kanji: "do, play", reading: "します" },
+{ kanji: "meet", reading: "あいます" },
+{ kanji: "a meal, cooked rice", reading: "ごはん" },
+{ kanji: "breakfast", reading: "あさごはん" },
+{ kanji: "lunch", reading: "ひるごはん" },
+{ kanji: "supper", reading: "ばんごはん" },
+{ kanji: "bread", reading: "パン" },
+{ kanji: "egg", reading: "たまご" },
+{ kanji: "meat", reading: "にく" },
+{ kanji: "fish", reading: "さかな" },
+{ kanji: "vegetable", reading: "やさい" },
+{ kanji: "fruit", reading: "くだもの" },
+{ kanji: "water", reading: "みず" },
+{ kanji: "tea, green tea", reading: "おちゃ" },
+{ kanji: "black tea", reading: "こうちゃ" },
+{ kanji: "milk", reading: "ぎゅうにゅう" },
+{ kanji: "milk", reading: "ミルク" },
+{ kanji: "juice", reading: "ジュース" },
+{ kanji: "beer", reading: "ビール" },
+{ kanji: "alcohol, Japanese rice wine", reading: "おさけ" },
+{ kanji: "tobacco, cigarette", reading: "たばこ" },
+{ kanji: "letter", reading: "てがみ" },
+{ kanji: "report", reading: "レポート" },
+{ kanji: "photograph", reading: "しゃしん" },
+{ kanji: "video (tape), video deck", reading: "ビデオ" },
+{ kanji: "shop, store", reading: "みせ" },
+{ kanji: "garden", reading: "にわ" },
+{ kanji: "homework ( を します : do homework)", reading: "しゅくだい" },
+{ kanji: "tennis ( を します : play tennis)", reading: "テニス" },
+{ kanji: "soccer, football ( を します : play soccer)", reading: "サッカー" },
+{ kanji: "cherry-blossom viewing ( を します : view the cherry blossoms)", reading: "おはなみ" },
+{ kanji: "what", reading: "なに" },
+{ kanji: "together", reading: "いっしょに" },
+{ kanji: "a little while, a little bit", reading: "ちょっと" },
+{ kanji: "always, usually", reading: "いつも" },
+{ kanji: "sometimes", reading: "ときどき" },
+{ kanji: "after that, and then", reading: "それから" },
+{ kanji: "yes", reading: "ええ" },
+{ kanji: "That’s good.", reading: "いいですね。" },
+{ kanji: "I see.", reading: "わかりました。" },
+{ kanji: "Yes? (lit: What is it?)", reading: "なんですか。" },
+{ kanji: "See you (tomorrow).", reading: "じゃ、また" },
+{ kanji: "Mexico", reading: "メキシコ" }
+        ],
+        vocab7: [
+{ kanji: "cut, slice", reading: "きります" },
+{ kanji: "send", reading: "おくります" },
+{ kanji: "give", reading: "あげます" },
+{ kanji: "receive", reading: "もらいます" },
+{ kanji: "lend", reading: "かします" },
+{ kanji: "borrow", reading: "かります" },
+{ kanji: "teach", reading: "おしえます" },
+{ kanji: "learn", reading: "ならいます" },
+{ kanji: "make a telephone call", reading: "かけます" },
+{ kanji: "hand, arm", reading: "て" },
+{ kanji: "chopsticks", reading: "はし" },
+{ kanji: "spoon", reading: "スプーン" },
+{ kanji: "knife", reading: "ナイフ" },
+{ kanji: "fork", reading: "フォーク" },
+{ kanji: "scissors", reading: "はさみ" },
+{ kanji: "personal computer", reading: "パソコン" },
+{ kanji: "mobile phone, cell phone", reading: "ケータイ" },
+{ kanji: "e-mail", reading: "メール" },
+{ kanji: "New Year’s greeting card", reading: "ねんがじょう" },
+{ kanji: "punch", reading: "パンチ" },
+{ kanji: "stapler", reading: "ホッチキス" },
+{ kanji: "Sellotape, Scotch tape, clear adhesive tape", reading: "セロテープ" },
+{ kanji: "rubber, eraser", reading: "けしゴム" },
+{ kanji: "paper", reading: "かみ" },
+{ kanji: "flower, blossom", reading: "はな" },
+{ kanji: "shirt", reading: "シャツ" },
+{ kanji: "present, gift", reading: "プレゼント" },
+{ kanji: "luggage, baggage, parcel", reading: "にもつ" },
+{ kanji: "money", reading: "おかね" },
+{ kanji: "ticket", reading: "きっぷ" },
+{ kanji: "Christmas", reading: "クリスマス" },
+{ kanji: " (my) father", reading: "ちち" },
+{ kanji: " (my) mother", reading: "はは" },
+{ kanji: " (someone else’s) father (one’s own father)", reading: "おとうさん" },
+{ kanji: " (someone else’s) mother (one’s own mother)", reading: "おかあさん" },
+{ kanji: "already", reading: "もう" },
+{ kanji: "not yet", reading: "まだ" },
+{ kanji: "from now on, soon", reading: "これから" },
+{ kanji: "What a nice ～!", reading: "～ すてきですね。" },
+{ kanji: "How nice of you to come. (lit. Welcome.)", reading: "いらっしゃい。" },
+{ kanji: "Do come in.", reading: "どうぞ おあがり ください。" },
+{ kanji: "May I? (lit. I commit an incivility)", reading: "しつれいします。" },
+{ kanji: "Would you like to have ～? (used when offering something)", reading: "～は いかがですか。" },
+{ kanji: "Thank you./I accept. (said before starting to eat or drink)", reading: "いただきます。" },
+{ kanji: "That was delicious. (said after eating or drinking)", reading: "ごちそうさま でした。" },
+{ kanji: "Spain", reading: "スペイン" }
+        ],
+        vocab8: [
+{ kanji: "handsome", reading: "ハンサム" },
+{ kanji: "beautiful, clean", reading: "きれい" },
+{ kanji: "quiet", reading: "しずか" },
+{ kanji: "lively", reading: "にぎやか" },
+{ kanji: "famous", reading: "ゆうめい" },
+{ kanji: "helpful, kind, considerate (not used about one’s own family members)", reading: "しんせつ" },
+{ kanji: "healthy, energetic, cheerful", reading: "げんき" },
+{ kanji: "free (time)", reading: "ひま" },
+{ kanji: "convenient", reading: "べんり" },
+{ kanji: "fine, nice, wonderful", reading: "すてき" },
+{ kanji: "big, large", reading: "おおきい" },
+{ kanji: "small, little", reading: "ちいさい" },
+{ kanji: "new, fresh", reading: "あたらしい" },
+{ kanji: "old (not used to describe a person’s age)", reading: "ふるい" },
+{ kanji: "good", reading: "いい" },
+{ kanji: "good", reading: "よい" },
+{ kanji: "bad", reading: "わるい" },
+{ kanji: "hot (referring to temperature)", reading: "あつい" },
+{ kanji: "hot (referring to temperature)", reading: "あつい" },
+{ kanji: "cold (referring to temperature)", reading: "さむい" },
+{ kanji: "cold (referring to touch)", reading: "つめたい" },
+{ kanji: "difficult", reading: "むずかしい" },
+{ kanji: "easy", reading: "やさしい" },
+{ kanji: "expensive, tall, high", reading: "たかい" },
+{ kanji: "inexpensive, cheap", reading: "やすい" },
+{ kanji: "low", reading: "ひくい" },
+{ kanji: "interesting", reading: "おもしろい" },
+{ kanji: "delicious, tasty", reading: "おいしい" },
+{ kanji: "busy", reading: "いそがしい" },
+{ kanji: "enjoyable", reading: "たのしい" },
+{ kanji: "white", reading: "しろい" },
+{ kanji: "black", reading: "くろい" },
+{ kanji: "red", reading: "あかい" },
+{ kanji: "blue", reading: "あおい" },
+{ kanji: "cherry (blossom)", reading: "さくら" },
+{ kanji: "mountain", reading: "やま" },
+{ kanji: "town, city", reading: "まち" },
+{ kanji: "food", reading: "たべもの" },
+{ kanji: "place", reading: "ところ" },
+{ kanji: "dormitory", reading: "りょう" },
+{ kanji: "restaurant", reading: "レストラン" },
+{ kanji: "life", reading: "せいかつ" },
+{ kanji: "work, business ( を します : do one’s job, work)", reading: "おしごと" },
+{ kanji: "how", reading: "どう" },
+{ kanji: "what kind of ～", reading: "どんな" },
+{ kanji: "very", reading: "とても" },
+{ kanji: "not so (used with negatives)", reading: "あまり" },
+{ kanji: "and (used to connect sentences)", reading: "そして" },
+{ kanji: "～, but ～", reading: "～が、～" },
+{ kanji: "How are you?", reading: "おげんきですか。" },
+{ kanji: "Well let me see. (pausing)", reading: "そうですね。" },
+{ kanji: "Won’t you have another cup of ～?", reading: "～、もう いっぱい いかがですか。" },
+{ kanji: "No, thank you.", reading: "いいえ、けっこうです。" },
+{ kanji: "It’s already ～, isn’t it?", reading: "もう ～ですね。" },
+{ kanji: "It’s time I was going.", reading: "そろそろ しつれいします。" },
+{ kanji: "Not at all.", reading: "いいえ。" },
+{ kanji: "Please come again.", reading: "また いらっしゃって ください。" },
+{ kanji: "Shanghai", reading: "シャンハイ" },
+{ kanji: "Kinkakuji Temple (the Golden Pavilion)", reading: "きんかくじ" },
+{ kanji: "Nara Park", reading: "ならこうえん" },
+{ kanji: "Mt. Fuji, the highest mountain in Japan", reading: "ふじさん" },
+{ kanji: "The Seven Samurai, a classic movie", reading: "しちにんの さむらい" }
+        ],
+        vocab9: [
+{ kanji: "understand", reading: "わかります" },
+{ kanji: "have", reading: "あります" },
+{ kanji: "like", reading: "すき" },
+{ kanji: "dislike", reading: "きらい" },
+{ kanji: "good at", reading: "じょうず" },
+{ kanji: "poor at", reading: "へた" },
+{ kanji: "drinks", reading: "のみもの" },
+{ kanji: "dish (cooked food), cooking ( を します : cook)", reading: "りょうり" },
+{ kanji: "sport ( を します : play sports)", reading: "スポーツ" },
+{ kanji: "baseball ( を します : play baseball)", reading: "やきゅう" },
+{ kanji: "dance ( を します : dance)", reading: "ダンス" },
+{ kanji: "trip, tour ( を します : travel, make a trip)", reading: "りょこう" },
+{ kanji: "music", reading: "おんがく" },
+{ kanji: "song", reading: "うた" },
+{ kanji: "classical music", reading: "クラシック" },
+{ kanji: "jazz", reading: "ジャズ" },
+{ kanji: "concert", reading: "コンサート" },
+{ kanji: "karaoke", reading: "カラオケ" },
+{ kanji: "Kabuki (traditional Japanese musical drama)", reading: "かぶき" },
+{ kanji: "picture, drawing", reading: "え" },
+{ kanji: "letter, character", reading: "じ" },
+{ kanji: "Chinese character", reading: "かんじ" },
+{ kanji: "hiragana script", reading: "ひらがな" },
+{ kanji: "katakana script", reading: "かたかな" },
+{ kanji: "the Roman alphabet", reading: "ローマじ" },
+{ kanji: "small change", reading: "こまかい おかね" },
+{ kanji: "ticket", reading: "チケット" },
+{ kanji: "time", reading: "じかん" },
+{ kanji: "something to do, errand", reading: "ようじ" },
+{ kanji: "appointment, promise ( を します : promise)", reading: "やくそく" },
+{ kanji: "side job ( を します : work part-time)", reading: "アルバイト" },
+{ kanji: " (someone else’s) husband", reading: "ごしゅじん" },
+{ kanji: " (my) husband", reading: "おっと" },
+{ kanji: " (my) husband", reading: "しゅじん" },
+{ kanji: " (someone else’s) wife", reading: "おくさん" },
+{ kanji: " (my) wife", reading: "つま" },
+{ kanji: " (my) wife", reading: "かない" },
+{ kanji: "child", reading: "こども" },
+{ kanji: "well, much", reading: "よく" },
+{ kanji: "mostly, roughly", reading: "だいたい" },
+{ kanji: "many, much", reading: "たくさん" },
+{ kanji: "a little, a few", reading: "すこし" },
+{ kanji: "not at all (used with negatives)", reading: "ぜんぜん" },
+{ kanji: "early, quickly, fast", reading: "はやく" },
+{ kanji: "because ～", reading: "～から" },
+{ kanji: "why", reading: "どうして" },
+{ kanji: "Please lend it to me.", reading: "かして ください。" },
+{ kanji: "Sure./Certainly.", reading: "いいですよ。" },
+{ kanji: "I’m sorry, but, unfortunately", reading: "ざんねんです。" },
+{ kanji: "oh", reading: "ああ" },
+{ kanji: "Won’t you join me (us)?", reading: "いっしょに いかがですか。" },
+{ kanji: " ～ is a bit difficult.", reading: "～は ちょっと……" },
+{ kanji: "So you can’t come?", reading: "だめですか。" },
+{ kanji: "Please ask me again some other time.", reading: "また こんど おねがいします。" }
+        ],
+        vocab10: [
+{ kanji: "exist, be (referring to inanimate things)", reading: "あります" },
+{ kanji: "exist, be (referring to animate things)", reading: "います" },
+{ kanji: "various", reading: "いろいろ" },
+{ kanji: "man", reading: "おとこの ひと" },
+{ kanji: "woman", reading: "おんなの ひと" },
+{ kanji: "boy", reading: "おとこの こ" },
+{ kanji: "girl", reading: "おんなの こ" },
+{ kanji: "dog", reading: "いぬ" },
+{ kanji: "cat", reading: "ねこ" },
+{ kanji: "panda", reading: "パンダ" },
+{ kanji: "elephant", reading: "ぞう" },
+{ kanji: "tree, wood", reading: "き" },
+{ kanji: "thing", reading: "もの" },
+{ kanji: "battery", reading: "でんち" },
+{ kanji: "box", reading: "はこ" },
+{ kanji: "switch", reading: "スイッチ" },
+{ kanji: "refrigerator", reading: "れいぞうこ" },
+{ kanji: "table", reading: "テーブル" },
+{ kanji: "bed", reading: "ベッド" },
+{ kanji: "shelf", reading: "たな" },
+{ kanji: "door", reading: "ドア" },
+{ kanji: "window", reading: "まど" },
+{ kanji: "postbox, mailbox", reading: "ポスト" },
+{ kanji: "building", reading: "ビル" },
+{ kanji: "cash machine, ATM (Automatic Teller Machine)", reading: "ATM" },
+{ kanji: "convenience store", reading: "コンビニ" },
+{ kanji: "park", reading: "こうえん" },
+{ kanji: "cafe, coffee shop", reading: "きっさてん" },
+{ kanji: "～shop, ～store", reading: "～や" },
+{ kanji: "a fixed place to catch taxis, trains, etc.", reading: "のりば" },
+{ kanji: "prefecture", reading: "けん" },
+{ kanji: "on, above, over", reading: "うえ" },
+{ kanji: "under, below, beneath", reading: "した" },
+{ kanji: "front, before", reading: "まえ" },
+{ kanji: "back, behind", reading: "うしろ" },
+{ kanji: "right [side]", reading: "みぎ" },
+{ kanji: "left [side]", reading: "ひだり" },
+{ kanji: "in, inside", reading: "なか" },
+{ kanji: "outside", reading: "そと" },
+{ kanji: "next, next door", reading: "となり" },
+{ kanji: "near, vicinity", reading: "ちかく" },
+{ kanji: "between, among", reading: "あいだ" },
+{ kanji: "～, ～, and so on", reading: "～や ～ [など]" },
+{ kanji: "Thank you.", reading: "どうも すみません。" },
+{ kanji: "name pla", reading: "ナンブラー" },
+{ kanji: "corner, section", reading: "コーナー" },
+{ kanji: "the bottom", reading: "いちばん した" },
+{ kanji: "Tokyo Disneyland", reading: "とうきょう ディズニーランド" },
+        ],
+        vocab11: [
+{ kanji: "have", reading: "います" },
+{ kanji: "stay, be", reading: "います" },
+{ kanji: "take, cost (referring to time or money)", reading: "かかります" },
+{ kanji: "take a day off [work]", reading: "やすみます" },
+{ kanji: "one (used when counting things)", reading: "ひとつ" },
+{ kanji: "two", reading: "ふたつ" },
+{ kanji: "three", reading: "みっつ" },
+{ kanji: "four", reading: "よっつ" },
+{ kanji: "five", reading: "いつつ" },
+{ kanji: "six", reading: "むっつ" },
+{ kanji: "seven", reading: "ななつ" },
+{ kanji: "eight", reading: "やっつ" },
+{ kanji: "nine", reading: "ここのつ" },
+{ kanji: "ten", reading: "とお" },
+{ kanji: "how many", reading: "いくつ" },
+{ kanji: "one person", reading: "ひとり" },
+{ kanji: "two people", reading: "ふたり" },
+{ kanji: "～ people", reading: "～にん" },
+{ kanji: "(counter for machines, cars, etc.)", reading: "～だい" },
+{ kanji: "(counter for paper, stamps, etc.)", reading: "～まい" },
+{ kanji: "～ times", reading: "～かい" },
+{ kanji: "apple", reading: "りんご" },
+{ kanji: "mandarin orange", reading: "みかん" },
+{ kanji: "sandwich", reading: "サンドイッチ" },
+{ kanji: "curry [with rice]", reading: "カレー" },
+{ kanji: "ice cream", reading: "アイスクリーム" },
+{ kanji: "postage stamp", reading: "きって" },
+{ kanji: "postcard", reading: "はがき" },
+{ kanji: "envelope", reading: "ふうとう" },
+{ kanji: "parents", reading: "りょうしん" },
+{ kanji: "brothers and sisters", reading: "きょうだい" },
+{ kanji: " (my) elder brother", reading: "あに" },
+{ kanji: " (someone else’s) elder brother", reading: "おにいさん" },
+{ kanji: " (my) elder brother", reading: "あに" },
+{ kanji: " (someone else’s) elder sister", reading: "おねえさん" },
+{ kanji: " (my) elder sister", reading: "あね" },
+{ kanji: " (someone else’s) younger brother", reading: "おとうとさん" },
+{ kanji: " (my) younger brother", reading: "おとうと" },
+{ kanji: " (someone else’s) younger sister", reading: "いもうとさん" },
+{ kanji: " (my) younger sister", reading: "いもうと" },
+{ kanji: "foreign country", reading: "がいこく" },
+{ kanji: "foreign student", reading: "りゅうがくせい" },
+{ kanji: "class", reading: "クラス" },
+{ kanji: "～ hour(s)", reading: "～じかん" },
+{ kanji: "～ week(s)", reading: "～しゅうかん" },
+{ kanji: "～ month(s)", reading: "～かげつ" },
+{ kanji: "～ year(s)", reading: "～ねん" },
+{ kanji: "about ～", reading: "～ぐらい" },
+{ kanji: "how long", reading: "どのくらい" },
+{ kanji: "in total", reading: "ぜんぶで" },
+{ kanji: "all, everything, everyone", reading: "みんな" },
+{ kanji: "only ～", reading: "～だけ" },
+{ kanji: "Certainly, (Sir/Madam).", reading: "かしこまりました。" },
+{ kanji: "Nice weather, isn’t it?", reading: "いいおてんきですね。" },
+{ kanji: "Are you going out?", reading: "おでかけですか。" },
+{ kanji: "I’m just going to ～.", reading: "ちょっと ～まで。" },
+{ kanji: "See you later./So long. (lit. Go and come back.)", reading: "いって らっしゃい。" },
+{ kanji: "See you later./So long. (lit. I’m going and coming back.)", reading: "いって きます。" },
+{ kanji: "sea mail", reading: "ふなびん" },
+{ kanji: "airmail", reading: "こうくうびん" },
+{ kanji: "Please. (lit. ask for a favour)", reading: "おねがいします。" },
+{ kanji: "Australia", reading: "オーストラリア" }
+        ],
+        vocab12: [
+{ kanji: "easy, simple", reading: "かんたん" },
+{ kanji: "near", reading: "ちかい" },
+{ kanji: "far", reading: "とおい" },
+{ kanji: "fast, early", reading: "はやい" },
+{ kanji: "slow, late", reading: "おそい" },
+{ kanji: "many [people], much", reading: "おおい" },
+{ kanji: "few [people], a little", reading: "すくない" },
+{ kanji: "warm", reading: "あたたかい" },
+{ kanji: "cool", reading: "すずしい" },
+{ kanji: "sweet", reading: "あまい" },
+{ kanji: "hot (taste), spicy", reading: "からい" },
+{ kanji: "heavy", reading: "おもい" },
+{ kanji: "light", reading: "かるい" },
+{ kanji: "prefer [coffee]", reading: "いい" },
+{ kanji: "season", reading: "きせつ" },
+{ kanji: "spring", reading: "はる" },
+{ kanji: "summer", reading: "なつ" },
+{ kanji: "autumn, fall", reading: "あき" },
+{ kanji: "winter", reading: "ふゆ" },
+{ kanji: "weather", reading: "てんき" },
+{ kanji: "rain, rainy", reading: "あめ" },
+{ kanji: "snow, snowy", reading: "ゆき" },
+{ kanji: "cloudy", reading: "くもり" },
+{ kanji: "hotel", reading: "ホテル" },
+{ kanji: "airport", reading: "くうこう" },
+{ kanji: "sea, ocean", reading: "うみ" },
+{ kanji: "world", reading: "せかい" },
+{ kanji: "party ( を します : give a party)", reading: "パーティー" },
+{ kanji: "festival", reading: "おまつり" },
+{ kanji: "sukiyaki (beef and vegetable hot pot)", reading: "すきやき" },
+{ kanji: "sashimi (sliced raw fish)", reading: "さしみ" },
+{ kanji: "sushi (vinegared rice topped with raw fish)", reading: "おすし" },
+{ kanji: "tempura (seafood and vegetables deep fried in batter)", reading: "てんぷら" },
+{ kanji: "pork", reading: "ぶたにく" },
+{ kanji: "chicken", reading: "とりにく" },
+{ kanji: "beef", reading: "ぎゅうにく" },
+{ kanji: "lemon", reading: "レモン" },
+{ kanji: "flower arrangement ( を します : practise flower arrangement)", reading: "いけばな" },
+{ kanji: "maple, red leaves of autumn", reading: "もみじ" },
+{ kanji: "which one (of two things)", reading: "どちら" },
+{ kanji: "both", reading: "どちらも" },
+{ kanji: "the most", reading: "いちばん" },
+{ kanji: "by far", reading: "ずっと" },
+{ kanji: "for the first time", reading: "はじめて" },
+{ kanji: "I’m home.", reading: "ただいま。" },
+{ kanji: "Welcome home.", reading: "おかえりなさい。" },
+{ kanji: "Wow! Look at all those people!", reading: "わあ、すごい ひとですね。" },
+{ kanji: "I’m tired", reading: "つかれました。" },
+{ kanji: "Hong Kong", reading: "ホンコン" },
+{ kanji: "Singapore", reading: "シンガポール" }
+        ],
+        vocab13: [
+{ kanji: "enjoy oneself, play", reading: "あそびます" },
+{ kanji: "swim", reading: "およぎます" },
+{ kanji: "go to meet, welcome", reading: "むかえます" },
+{ kanji: "get tired (when expressing the condition of being tired, つかれました is used)", reading: "つかれます" },
+{ kanji: "marry, get married", reading: "けっこんします" },
+{ kanji: "do shopping", reading: "かいものします" },
+{ kanji: "have a meal, dine", reading: "しょくじします" },
+{ kanji: "take a walk", reading: "さんぽします" },
+{ kanji: "hard, tough, severe, awful", reading: "たいへん" },
+{ kanji: "want (something)", reading: "ほしい" },
+{ kanji: "wide, spacious", reading: "ひろい" },
+{ kanji: "narrow, small (room, etc.)", reading: "せまい" },
+{ kanji: "swimming pool", reading: "プール" },
+{ kanji: "river", reading: "かわ" },
+{ kanji: "fine arts", reading: "びじゅつ" },
+{ kanji: "fishing ( を します : fish, angle)", reading: "つり" },
+{ kanji: "skiing ( を します : ski)", reading: "スキー" },
+{ kanji: "weekend", reading: "しゅうまつ" },
+{ kanji: "about   (time)", reading: "～ごろ" },
+{ kanji: "something", reading: "なにか" },
+{ kanji: "somewhere, some place", reading: "どこか" },
+{ kanji: "get thirsty", reading: "のどが かわきます" },
+{ kanji: "get hungry", reading: "おなかが すきます" },
+{ kanji: "Let’s do that.", reading: "そう しましょう。" },
+{ kanji: "May I take your order?", reading: "ごちゅうもん は?" },
+{ kanji: "set meal", reading: "ていしょく" },
+{ kanji: "bowl of rice topped with beef", reading: "ぎゅうどん" },
+{ kanji: "Please wait.", reading: "しょうしょう おまち ください。" },
+{ kanji: "～, not at all (polite equivalent of です)", reading: "～で ございます。" },
+{ kanji: "separately", reading: "べつべつ に" }
+        ],
+        vocab14: [
+{ kanji: "turn on", reading: "つけます" },
+{ kanji: "turn off", reading: "けします" },
+{ kanji: "open", reading: "あけます" },
+{ kanji: "close, shut", reading: "しめます" },
+{ kanji: "hurry", reading: "いそぎます" },
+{ kanji: "wait", reading: "まちます" },
+{ kanji: "hold", reading: "もちます" },
+{ kanji: "take, pass", reading: "とります" },
+{ kanji: "help (with a task)", reading: "てつだいます" },
+{ kanji: "call", reading: "よびます" },
+{ kanji: "speak, talk", reading: "はなします" },
+{ kanji: "use", reading: "つかいます" },
+{ kanji: "stop, park", reading: "とめます" },
+{ kanji: "show", reading: "みせます" },
+{ kanji: "tell [an address]", reading: "おしえます" },
+{ kanji: "sit down", reading: "すわります" },
+{ kanji: "stand up", reading: "たちます" },
+{ kanji: "enter", reading: "はいります" },
+{ kanji: "go out", reading: "でます" },
+{ kanji: "rain", reading: "ふります" },
+{ kanji: "copy", reading: "コピーします" },
+{ kanji: "electricity, light", reading: "でんき" },
+{ kanji: "air conditioner", reading: "エアコン" },
+{ kanji: "passport", reading: "パスポート" },
+{ kanji: "name", reading: "なまえ" },
+{ kanji: "address", reading: "じゅうしょ" },
+{ kanji: "map", reading: "ちず" },
+{ kanji: "salt", reading: "しお" },
+{ kanji: "sugar", reading: "さとう" },
+{ kanji: "question, problem, trouble", reading: "もんだい" },
+{ kanji: "answer", reading: "こたえ" },
+{ kanji: "how to read, way of reading", reading: "よみかた" },
+{ kanji: "how to ～, way of ～ing", reading: "～かた" },
+{ kanji: "straight", reading: "まっすぐ" },
+{ kanji: "slowly, leisurely", reading: "ゆっくり" },
+{ kanji: "immediately", reading: "すぐ" },
+{ kanji: "again", reading: "また" },
+{ kanji: "later", reading: "あとで" },
+{ kanji: "a little more", reading: "もう すこし" },
+{ kanji: "～ more, another ～", reading: "もう ～" },
+{ kanji: "right (used when encouraging some course of action)", reading: "さあ" },
+{ kanji: "Oh! Eh? (in surprise or wonder)", reading: "あれ?" },
+{ kanji: "Turn right at the traffic lights.", reading: "しんごうを みぎへ まがって ください。" },
+{ kanji: "I’d like to pay with this.", reading: "これで おねがいします。" },
+{ kanji: "change (money)", reading: "おつり" }
+        ],
+        vocab15: [
+{ kanji: "put", reading: "おきます" },
+{ kanji: "make, produce", reading: "つくります" },
+{ kanji: "sell", reading: "うります" },
+{ kanji: "get to know", reading: "しります" },
+{ kanji: "be going to live", reading: "すみます" },
+{ kanji: "do research", reading: "けんきゅうします" },
+{ kanji: "materials, data", reading: "しりょう" },
+{ kanji: "catalogue", reading: "カタログ" },
+{ kanji: "timetable", reading: "じこくひょう" },
+{ kanji: "clothes", reading: "ふく" },
+{ kanji: "products", reading: "せいひん" },
+{ kanji: "software", reading: "ソフト" },
+{ kanji: "electronic dictionary", reading: "でんしじしょ" },
+{ kanji: "economy", reading: "けいざい" },
+{ kanji: "municipal office, city hall", reading: "しやくしょ" },
+{ kanji: "senior high school", reading: "こうこう" },
+{ kanji: "dentist, dentist’s", reading: "はいしゃ" },
+{ kanji: "single, unmarried", reading: "どくしん" },
+{ kanji: "I’m sorry.", reading: "すみません" },
+{ kanji: "Ladies and Gentlemen, everybody", reading: "みなさん" },
+{ kanji: "remember, recollect", reading: "おもいだします" },
+{ kanji: "be (honorific equivalent of います)", reading: "いらっしゃいます" }
+        ],
+        vocab16: [
+{ kanji: "ride, get on [a train]", reading: "のります" },
+{ kanji: "get off [a train]", reading: "おります" },
+{ kanji: "change (train, etc.)", reading: "のりかえます" },
+{ kanji: "take [a shower]", reading: "あびます" },
+{ kanji: "put in, insert", reading: "いれます" },
+{ kanji: "take out, hand in", reading: "だします" },
+{ kanji: "withdraw [money]", reading: "おろします" },
+{ kanji: "enter [university]", reading: "はいります" },
+{ kanji: "graduate from [university]", reading: "でます" },
+{ kanji: "push, press", reading: "おします" },
+{ kanji: "drink alcohol", reading: "のみます" },
+{ kanji: "start, begin", reading: "はじめます" },
+{ kanji: "tour, visit a place to study it", reading: "けんがくします" },
+{ kanji: "phone", reading: "でんわします" },
+{ kanji: "young", reading: "わかい" },
+{ kanji: "long", reading: "ながい" },
+{ kanji: "short", reading: "みじかい" },
+{ kanji: "bright, light", reading: "あかるい" },
+{ kanji: "dark", reading: "くらい" },
+{ kanji: "body, health", reading: "からだ" },
+{ kanji: "head, brain", reading: "あたま" },
+{ kanji: "hair", reading: "かみ" },
+{ kanji: "face", reading: "かお" },
+{ kanji: "eye", reading: "め" },
+{ kanji: "ear", reading: "みみ" },
+{ kanji: "nose", reading: "はな" },
+{ kanji: "mouth", reading: "くち" },
+{ kanji: "tooth", reading: "は" },
+{ kanji: "stomach", reading: "おなか" },
+{ kanji: "leg, foot", reading: "あし" },
+{ kanji: "height", reading: "せ" },
+{ kanji: "service", reading: "サービス" },
+{ kanji: "jogging ( を します : jog)", reading: "ジョギング" },
+{ kanji: "shower", reading: "シャワー" },
+{ kanji: "green, greenery", reading: "みどり" },
+{ kanji: "Buddhist temple", reading: "おてら" },
+{ kanji: "Shinto shrine", reading: "じんじゃ" },
+{ kanji: "number ～", reading: "～ばん" },
+{ kanji: "in what way, how", reading: "どうやって" },
+{ kanji: "which ～ (used for three or more)", reading: "どの～" },
+{ kanji: "which one (of three or more things)", reading: "どれ" },
+{ kanji: "That’s amazing!", reading: "すごいですね。" },
+{ kanji: "[No.] I still have a long way to go.", reading: "いいえ、まだまだです。" },
+{ kanji: "Are you making a withdrawal?", reading: "おひきだしですか。" },
+{ kanji: "first of all", reading: "まず" },
+{ kanji: "next, as a next step", reading: "つぎ に" },
+{ kanji: "cash dispensing card", reading: "キャッシュカード" },
+{ kanji: "personal identification number, PIN", reading: "あんしょうばんごう" },
+{ kanji: "amount of money", reading: "きんがく" },
+{ kanji: "confirmation ( を します : confirm)", reading: "かくにん" },
+{ kanji: "button", reading: "ボタン" },
+{ kanji: "Snow Festival", reading: "ゆきまつり" },
+        ],
+        vocab17: [
+{ kanji: "memorise", reading: "おぼえます" },
+{ kanji: "forget", reading: "わすれます" },
+{ kanji: "lose", reading: "なくします" },
+{ kanji: "pay", reading: "はらいます" },
+{ kanji: "give back, return", reading: "かえします" },
+{ kanji: "go out", reading: "でかけます" },
+{ kanji: "take off (clothes, shoes, etc.)", reading: "ぬぎます" },
+{ kanji: "take (something)", reading: "もって いきます" },
+{ kanji: "bring (something)", reading: "もって きます" },
+{ kanji: "worry", reading: "しんぱいします" },
+{ kanji: "work overtime", reading: "ざんぎょうします" },
+{ kanji: "go on a business trip", reading: "しゅっちょうします" },
+{ kanji: "take [medicine]", reading: "のみます" },
+{ kanji: "take [a bath]", reading: "はいります" },
+{ kanji: "important, precious", reading: "たいせつ" },
+{ kanji: "all right", reading: "だいじょうぶ" },
+{ kanji: "dangerous", reading: "あぶない" },
+{ kanji: "no smoking", reading: "きんえん" },
+{ kanji: "[health] insurance card", reading: "けんこうほけんしょう" },
+{ kanji: "temperature, fever", reading: "ねつ" },
+{ kanji: "illness, disease", reading: "びょうき" },
+{ kanji: "medicine", reading: "くすり" },
+{ kanji: "bath", reading: "おふろ" },
+{ kanji: "jacket, outerwear", reading: "うわぎ" },
+{ kanji: "underwear", reading: "したぎ" },
+{ kanji: "two or three days", reading: "２、３にち" },
+{ kanji: "two or three ～ (where ～ is a counter suffix)", reading: "２、３～" },
+{ kanji: "before～, by～ (indicating time limit)", reading: "～までに" },
+{ kanji: "therefore, so", reading: "ですから" },
+{ kanji: "What’s the matter?", reading: "どう しましたか。" },
+{ kanji: "throat", reading: "のど" },
+{ kanji: "(I) have a pain [in my ～].", reading: "～が いたいです。" },
+{ kanji: "cold, flu", reading: "かぜ" },
+{ kanji: "and, furthermore", reading: "それから" },
+{ kanji: "Take care of yourself. (said to people who are ill)", reading: "おだいじ に。" }
+        ],
+        vocab18: [
+{ kanji: "be able to, can", reading: "できます" },
+{ kanji: "wash", reading: "あらいます" },
+{ kanji: "play (stringed instrument, piano, etc.)", reading: "ひきます" },
+{ kanji: "sing", reading: "うたいます" },
+{ kanji: "collect, gather", reading: "あつめます" },
+{ kanji: "throw away", reading: "すてます" },
+{ kanji: "exchange, change", reading: "かえます" },
+{ kanji: "drive", reading: "うんてんします" },
+{ kanji: "reserve, book", reading: "よやくします" },
+{ kanji: "piano", reading: "ピアノ" },
+{ kanji: "～ meter", reading: "～メートル" },
+{ kanji: "cash", reading: "げんきん" },
+{ kanji: "hobby", reading: "しゅみ" },
+{ kanji: "diary", reading: "にっき" },
+{ kanji: "prayer ( を します : pray)", reading: "おいのり" },
+{ kanji: "section head", reading: "かちょう" },
+{ kanji: "department head", reading: "ぶちょう" },
+{ kanji: "company president", reading: "しゃちょう" },
+{ kanji: "animal", reading: "どうぶつ" },
+{ kanji: "horse", reading: "うま" },
+{ kanji: "the Internet", reading: "インターネット" },
+{ kanji: "especially", reading: "とくに" },
+{ kanji: "What! Really! (used when expressing surprise)", reading: "へえ" },
+{ kanji: "That’s interesting, isn’t it?", reading: "それは おもしろいですね。" },
+{ kanji: "not easily (used with negatives)", reading: "なかなか" },
+{ kanji: "Really?", reading: "ほんとうですか。" },
+{ kanji: "by all means, really", reading: "ぜひ" },
+        ],
+        vocab19: [
+{ kanji: "climb, go up", reading: "のぼります I" },
+{ kanji: "climb, go up", reading: "あがります" },
+{ kanji: "stay [at a hotel]", reading: "とまります I" },
+{ kanji: "stay [at a hotel]", reading: "とまります" },
+{ kanji: "clean (a room)", reading: "そうじします III" },
+{ kanji: "clean (a room)", reading: "そうじします" },
+{ kanji: "wash (clothes)", reading: "せんたくします III" },
+{ kanji: "wash (clothes)", reading: "せんたくします" },
+{ kanji: "become", reading: "なります I" },
+{ kanji: "sleepy", reading: "ねむい" },
+{ kanji: "sleepy", reading: "ねむい" },
+{ kanji: "strong", reading: "つよい" },
+{ kanji: "strong", reading: "つよい" },
+{ kanji: "weak", reading: "よわい" },
+{ kanji: "weak", reading: "よわい" },
+{ kanji: "practice ( を します : practise)", reading: "れんしゅう" },
+{ kanji: "practice ( を します : practise)", reading: "れんしゅう" },
+{ kanji: "golf ( を します : play golf)", reading: "ゴルフ" },
+{ kanji: "sumo wrestling ( を します : wrestle)", reading: "すもう" },
+{ kanji: "sumo wrestling ( を します : wrestle)", reading: "すもう" },
+{ kanji: "tea ceremony", reading: "おちゃ" },
+{ kanji: "tea ceremony", reading: "おちゃ" },
+{ kanji: "day, date", reading: "ひ" },
+{ kanji: "day, date", reading: "ひ" },
+{ kanji: "condition", reading: "ちょうし" },
+{ kanji: "condition", reading: "ちょうし" },
+{ kanji: "once", reading: "いちど" },
+{ kanji: "once", reading: "いちど" },
+{ kanji: "not once, never (used with negatives)", reading: "いちども" },
+{ kanji: "not once, never (used with negatives)", reading: "いちども" },
+{ kanji: "gradually", reading: "だんだん" },
+{ kanji: "soon", reading: "もうすぐ" },
+{ kanji: "Thank you. (used when expressing gratitude for help received)", reading: "おかげさまで" },
+{ kanji: "but", reading: "でも" },
+{ kanji: "Bottoms up! / Cheers!", reading: "かんぱい" },
+{ kanji: "diet (~をします: go on a diet)", reading: "ダイエット" },
+{ kanji: "excessive, impossible", reading: "むり な" },
+{ kanji: "good for one's health", reading: "からだにいい" }
+        ],
+        vocab20: [
+{ kanji: "need, require", reading: "いります" },
+{ kanji: "check, investigate", reading: "しらべます" },
+{ kanji: "repair", reading: "しゅうりします" },
+{ kanji: "I (an informal equivalent of わたし used by men)", reading: "ぼく" },
+{ kanji: "you (an informal equivalent of あなた used to address people of equal or lower status)", reading: "きみ" },
+{ kanji: "Mr. (an informal equivalent of 〜さん used to address people of equal or lower status; also often appended to boys’ names)", reading: "〜くん" },
+{ kanji: "yes (an informal equivalent of はい)", reading: "うん" },
+{ kanji: "no (an informal equivalent of いいえ)", reading: "ううん" },
+{ kanji: "word, language", reading: "ことば" },
+{ kanji: "kimono (traditional Japanese attire)", reading: "きもの" },
+{ kanji: "visa", reading: "ビザ" },
+{ kanji: "the beginning", reading: "はじめ" },
+{ kanji: "the end of 〜, The End", reading: "おわり" },
+{ kanji: "this way, this place (an informal equivalent of こちら)", reading: "こっち" },
+{ kanji: "that way, that place near the listener (an informal equivalent of そちら)", reading: "そっち" },
+{ kanji: "that way, that place over there (an informal equivalent of あちら)", reading: "あっち" },
+{ kanji: "which one (of two things), which way, where (an informal equivalent of どちら)", reading: "どっち" },
+{ kanji: "all together", reading: "みんなで" },
+{ kanji: "〜, but (an informal equivalent of が)", reading: "〜けど" },
+{ kanji: "(I'm) full", reading: "おなかがいっぱいです" },
+{ kanji: "if you like", reading: "よかったら" },
+{ kanji: "various", reading: "いろいろ" }
+        ],
+        vocab21: [
+{ kanji: "think", reading: "おもいます" },
+{ kanji: "say", reading: "いいます" },
+{ kanji: "win", reading: "かちます" },
+{ kanji: "lose, be beaten", reading: "まけます" },
+{ kanji: "[a festival] be held, take place", reading: "あります" },
+{ kanji: "be useful", reading: "やくにたちます" },
+{ kanji: "move, work", reading: "うごきます" },
+{ kanji: "quit or retire from [a company], stop, give up", reading: "やめます" },
+{ kanji: "pay attention, take care", reading: "きをつけます" },
+{ kanji: "wasteful", reading: "むだ な" },
+{ kanji: "inconvenient", reading: "ふべん な" },
+{ kanji: "awful, great (expresses astonishment or admiration)", reading: "すごい" },
+{ kanji: "true", reading: "ほんとう" },
+{ kanji: "lie", reading: "うそ" },
+{ kanji: "car, automobile", reading: "じどうしゃ" },
+{ kanji: "transport, traffic", reading: "こうつう" },
+{ kanji: "[commodity] prices", reading: "ぶっか" },
+{ kanji: "announcement, broadcast", reading: "ほうそう" },
+{ kanji: "news", reading: "ニュース" },
+{ kanji: "anime (Japanese animated film)", reading: "アニメ" },
+{ kanji: "comic book", reading: "マンガ" },
+{ kanji: "design, artwork", reading: "デザイン" },
+{ kanji: "dream", reading: "ゆめ" },
+{ kanji: "genius", reading: "てんさい" },
+{ kanji: "game, match (~をします: play a game/match)", reading: "しあい" },
+{ kanji: "opinion", reading: "いけん" },
+{ kanji: "talk, speech, what one says, story (~をします: talk, tell a story)", reading: "はなし" },
+{ kanji: "earth", reading: "ちきゅう" },
+{ kanji: "moon", reading: "つき" },
+{ kanji: "recently, these days", reading: "さいきん" },
+{ kanji: "probably, perhaps, maybe", reading: "たぶん" },
+{ kanji: "surely, definitely", reading: "きっと" },
+{ kanji: "really", reading: "ほんとうに" },
+{ kanji: "not so (used with negatives)", reading: "そんなに" },
+{ kanji: "about ~, concerning ~", reading: "〜について" },
+{ kanji: "It's been a long time [since we last met].", reading: "ひさしぶりですね" },
+{ kanji: "How about drinking ~ or something?", reading: "〜でものみませんか" },
+{ kanji: "of course", reading: "もちろん" },
+{ kanji: "I have to get home now......", reading: "もうかえらないと" },
+{ kanji: "kangaroo", reading: "カンガルー" }
+        ],
+        vocab22: [
+{ kanji: "put on (a shirt, etc.)", reading: "きます" },
+{ kanji: "put on (shoes, trousers, etc.)", reading: "はきます" },
+{ kanji: "put on (a hat, etc.)", reading: "かぶります" },
+{ kanji: "put on [glasses]", reading: "かけます" },
+{ kanji: "put on [tie]", reading: "します" },
+{ kanji: "be born", reading: "うまれます" },
+{ kanji: "we", reading: "わたしたち" },
+{ kanji: "coat", reading: "コート" },
+{ kanji: "sweater", reading: "セーター" },
+{ kanji: "suit", reading: "スーツ" },
+{ kanji: "hat, cap", reading: "ぼうし" },
+{ kanji: "glasses", reading: "めがね" },
+{ kanji: "cake", reading: "ケーキ" },
+{ kanji: "box lunch", reading: "おべんとう" },
+{ kanji: "robot", reading: "ロボット" },
+{ kanji: "humor", reading: "ユーモア" },
+{ kanji: "convenience", reading: "つごう" },
+{ kanji: "often", reading: "よく" },
+{ kanji: "well, let me see", reading: "えーと" },
+{ kanji: "Congratulations. (used on birthdays, at weddings, New Year's Day, etc.)", reading: "おめでとう ございます" },
+{ kanji: "Are you looking for ~?", reading: "おさがしですか" },
+{ kanji: "Well then,", reading: "では" },
+{ kanji: "this (polite equivalent of これ)", reading: "こちら" },
+{ kanji: "rent", reading: "やちん" },
+{ kanji: "kitchen with a dining area", reading: "ダイニングキッチン" },
+{ kanji: "Japanese-style room", reading: "わしつ" },
+{ kanji: "Japanese-style closet", reading: "おしいれ" },
+{ kanji: "Japanese-style mattress and quilt", reading: "ふとん" },
+{ kanji: "Paris", reading: "パリ" },
+        ],
+        vocab23: [
+{ kanji: "ask [the teacher]", reading: "ききます" },
+{ kanji: "turn", reading: "まわします" },
+{ kanji: "pull", reading: "ひきます" },
+{ kanji: "change", reading: "かえます" },
+{ kanji: "touch [a door]", reading: "さわります" },
+{ kanji: "[change] come out", reading: "でます" },
+{ kanji: "walk", reading: "あるきます" },
+{ kanji: "cross [a bridge]", reading: "わたります" },
+{ kanji: "turn [to the right]", reading: "まがります" },
+{ kanji: "lonely", reading: "さびしい" },
+{ kanji: "hot water", reading: "おゆ" },
+{ kanji: "sound", reading: "おと" },
+{ kanji: "size", reading: "サイズ" },
+{ kanji: "breakdown (~します: break down)", reading: "こしょう" },
+{ kanji: "road, way", reading: "みち" },
+{ kanji: "crossroads", reading: "こうさてん" },
+{ kanji: "traffic lights", reading: "しんごう" },
+{ kanji: "corner", reading: "かど" },
+{ kanji: "bridge", reading: "はし" },
+{ kanji: "car park, parking lot", reading: "ちゅうしゃじょう" },
+{ kanji: "building", reading: "たてもの" },
+{ kanji: "many times", reading: "なんかいも" },
+{ kanji: "the -th (indicating order)", reading: "〜め" },
+        ],
+        vocab24: [
+{ kanji: "give (me)", reading: "くれます" },
+{ kanji: "repair, correct", reading: "なおします" },
+{ kanji: "take (someone)", reading: "つれていきます" },
+{ kanji: "bring (someone)", reading: "つれてきます" },
+{ kanji: "escort [someone], go with", reading: "おくります" },
+{ kanji: "introduce", reading: "しょうかいします" },
+{ kanji: "show around, show the way", reading: "あんないします" },
+{ kanji: "explain", reading: "せつめいします" },
+{ kanji: "grandfather, old man", reading: "おじさん" },
+{ kanji: "grandmother, old woman", reading: "おばあさん" },
+{ kanji: "preparation (~をします: prepare)", reading: "じゅんび" },
+{ kanji: "moving out (~をします: move out)", reading: "ひっこし" },
+{ kanji: "sweets, snacks", reading: "おかし" },
+{ kanji: "homestay", reading: "ホームステイ" },
+{ kanji: "all", reading: "ぜんぶ" },
+{ kanji: "by oneself", reading: "じぶんで" },
+{ kanji: "besides", reading: "ほかに" },
+{ kanji: "Mother's Day", reading: "ははのひ" }
+        ],
+        vocab25: [
+{ kanji: "think, consider", reading: "かんがえます" },
+{ kanji: "arrive", reading: "つきます" },
+{ kanji: "study abroad", reading: "りゅうがくします" },
+{ kanji: "grow old", reading: "とります" },
+{ kanji: "be enough, be sufficient", reading: "たります" },
+{ kanji: "countryside, hometown", reading: "いなか" },
+{ kanji: "chance", reading: "チャンス" },
+{ kanji: "hundred million", reading: "おく" },
+{ kanji: "if", reading: "もし" },
+{ kanji: "meaning", reading: "いみ" },
+{ kanji: "hello (used on the phone)", reading: "もしもし" },
+{ kanji: "transfer (~します: be transferred to another office)", reading: "てんきん" },
+{ kanji: "thing, matter (~のこと: thing about ~)", reading: "こと" },
+{ kanji: "free time", reading: "ひま" },
+{ kanji: "Thank you for everything you've done for me.", reading: "いろいろおせわになりました" },
+{ kanji: "do one's best", reading: "がんばります" },
+{ kanji: "Please take care of yourself. (said when expecting a long separation)", reading: "どうぞおげんきで" },
+{ kanji: "Vietnam", reading: "ベトナム" }
+        ],
+      }
+    },
+    n4: {
+kanjiSets: {
     kanji1: [
 { kanji: "短い", reading: "みじかい" },
 { kanji: "短大", reading: "たんだい" },
@@ -255,9 +1392,8 @@
 { kanji: "痛む", reading: "いたむ" },
 { kanji: "頭痛", reading: "ずつう" }
     ]
-  };
-
-  const vocabSets = {
+  },
+   vocabSets: {
     vocab1: [
 { kanji: "check", reading: "みます" },
 { kanji: "look for, search", reading: "さがします" },
@@ -625,14 +1761,33 @@
 { kanji: "sweetheart, boyfriend, girlfriend", reading: "こいびと" },
 { kanji: "rich person", reading: "おかねもち" }
     ]
+  }
+    },
+    n3: {
+      kanjiSets: {
+        kanji1: [{ kanji: "橋", reading: "はし" }, { kanji: "線", reading: "せん" }],
+        kanji2: [{ kanji: "港", reading: "みなと" }, { kanji: "湖", reading: "みずうみ" }]
+      },
+      vocabSets: {
+        vocab1: [{ kanji: "飛行機", reading: "ひこうき" }, { kanji: "空港", reading: "くうこう" }],
+        vocab2: [{ kanji: "地図", reading: "ちず" }, { kanji: "地下鉄", reading: "ちかてつ" }]
+      }
+    }
   };
 
-  let mainArray = [];
+  let currentLevel = "";
   let currentCategory = "";
+  let mainArray = [];
   let score = 0;
   let answered = [];
   let shuffledQuestions = [];
   let currentQuestion = {};
+
+  function selectLevel(level) {
+    currentLevel = level;
+    document.getElementById("levelScreen").classList.add("hidden");
+    document.getElementById("choiceScreen").classList.remove("hidden");
+  }
 
   function selectCategory(category) {
     currentCategory = category;
@@ -641,16 +1796,38 @@
     buildCheckboxes();
   }
 
-  function buildCheckboxes() {
-    const container = document.getElementById("checkboxContainer");
-    container.innerHTML = "";
-    const sets = currentCategory === "kanji" ? kanjiSets : vocabSets;
-    container.innerHTML += `<label><input type="checkbox" id="all" onchange="toggleAll(this)"> All</label>`;
-    Object.keys(sets).forEach((key, i) => {
-      const label = currentCategory === "kanji" ? `N4_Week ${i+2}` : `Lesson ${i+26}`;
-      container.innerHTML += `<label><input type="checkbox" class="setBox" value="${key}"> ${label}</label>`;
-    });
-  }
+function buildCheckboxes() {
+  const container = document.getElementById("checkboxContainer");
+  container.innerHTML = "";
+
+  const sets = data[currentLevel][currentCategory + "Sets"];
+
+  // ✅ "All" checkbox centered above columns
+  container.innerHTML += `
+    <label class="checkbox-all">
+      <input type="checkbox" id="all" onchange="toggleAll(this)">
+      All${currentCategory === "kanji" ? ` (${currentLevel.toUpperCase()})` : ""}
+    </label>
+  `;
+
+  // ✅ Generate checkboxes dynamically
+  Object.keys(sets).forEach((key, i) => {
+    let label;
+    if (currentCategory === "kanji") {
+      label = `${currentLevel.toUpperCase()} Week ${i + 1}`;
+    } else {
+      const lessonNumber = currentLevel === "n4" ? 26 + i : i + 1;
+      label = `Lesson ${lessonNumber}`;
+    }
+    container.innerHTML += `
+      <label>
+        <input type="checkbox" class="setBox" value="${key}"> ${label}
+      </label>
+    `;
+  });
+}
+
+
 
   function toggleAll(allBox) {
     document.querySelectorAll(".setBox").forEach(cb => cb.checked = allBox.checked);
@@ -658,7 +1835,7 @@
 
   function buildMainArray() {
     mainArray = [];
-    const sets = currentCategory === "kanji" ? kanjiSets : vocabSets;
+    const sets = data[currentLevel][currentCategory + "Sets"];
     document.querySelectorAll(".setBox:checked").forEach(cb => {
       mainArray.push(...sets[cb.value]);
     });
@@ -679,9 +1856,8 @@
     score = 0;
     answered = [];
     shuffledQuestions = shuffle([...mainArray]);
-    document.getElementById("score").textContent = `Score: ${score}`;
     document.getElementById("feedback").textContent = "";
-    document.getElementById("kanji").textContent = "?";
+    document.getElementById("score").textContent = `Score: ${score}`;
     pickQuestion();
   }
 
@@ -698,7 +1874,15 @@
     }
 
     currentQuestion = shuffledQuestions.pop();
-    document.getElementById("kanji").textContent = currentQuestion.kanji;
+
+    const kanjiDiv = document.getElementById("kanji");
+    kanjiDiv.textContent = currentQuestion.kanji;
+
+    if (currentCategory === "vocab") {
+      kanjiDiv.classList.add("vocab-question");
+    } else {
+      kanjiDiv.classList.remove("vocab-question");
+    }
 
     const otherReadings = shuffle(mainArray.filter(k => k.reading !== currentQuestion.reading));
     const options = shuffle([
@@ -719,23 +1903,18 @@
   }
 
   function checkAnswer(answer) {
-    const feedback = document.getElementById("feedback");
     if (answer === currentQuestion.reading) {
       score++;
       if (!answered.includes(currentQuestion.kanji)) answered.push(currentQuestion.kanji);
-      feedback.textContent = "Correct!";
+      document.getElementById("feedback").textContent = "Correct!";
       document.getElementById("score").textContent = `Score: ${score}`;
-      setTimeout(() => {
-        feedback.textContent = "";
-        pickQuestion();
-      }, 500); // ✅ 0.5s for correct
     } else {
-      feedback.textContent = `Wrong! Correct was: ${currentQuestion.reading}`;
-      setTimeout(() => {
-        feedback.textContent = "";
-        pickQuestion();
-      }, 1000); // ✅ 1s for wrong
+      document.getElementById("feedback").textContent = `Wrong! Correct was: ${currentQuestion.reading}`;
     }
+    setTimeout(() => {
+      document.getElementById("feedback").textContent = "";
+      pickQuestion();
+    }, 500); // ✅ 0.5s for both
   }
 
   function shuffle(array) {
@@ -754,6 +1933,11 @@
   function goBackToChoice() {
     document.getElementById("checkboxScreen").classList.add("hidden");
     document.getElementById("choiceScreen").classList.remove("hidden");
+  }
+
+  function goBackToLevel() {
+    document.getElementById("choiceScreen").classList.add("hidden");
+    document.getElementById("levelScreen").classList.remove("hidden");
   }
 </script>
 </body>
