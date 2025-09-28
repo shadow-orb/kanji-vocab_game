@@ -47,8 +47,8 @@
     }
 
 .checkbox-group {
-  display: grid; /* ✅ was flex */
-  grid-template-columns: repeat(5, 1fr); /* ✅ 5 equal columns */
+  display: grid; /* was flex */
+  grid-template-columns: repeat(5, 1fr); /* 5 equal columns */
   gap: 10px;
   margin-bottom: 20px;
   color: white;
@@ -56,7 +56,7 @@
   justify-items: center;
 }
 
-/* ✅ NEW: Center the "All" checkbox above columns */
+/* Center the "All" checkbox above columns */
 .checkbox-all {
   grid-column: 1 / -1;
   justify-self: center;
@@ -70,7 +70,7 @@
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 
-  /* ✅ NEW: allow long text to wrap nicely */
+  /* allow long text to wrap nicely */
   max-width: 90%;
   word-wrap: break-word;
   white-space: normal;
@@ -78,7 +78,7 @@
 }
 
     .vocab-question {
-      font-size: 1.5em; /* ✅ 200% smaller than kanji */
+      font-size: 1.5em; /* 200% smaller than kanji */
     }
 
     .choices {
@@ -108,7 +108,7 @@
       color: white;
     }
 
-    /* ✅ Style for checkbox grid */
+    /*　Style for checkbox grid */
 .checkbox-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr); /* 5 columns */
@@ -162,16 +162,472 @@
   </div>
 
 <script>
-  // ✅ Data organized by level -> category
+  //Data organized by level -> category
   const data = {
     n5: {
       kanjiSets: {
-        kanji1: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
-        kanji2: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
-        kanji3: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
-        kanji4: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
-        kanji5: [{ kanji: "日", reading: "にち" }, { kanji: "月", reading: "つき" }],
-        kanji6: [{ kanji: "山", reading: "やま" }, { kanji: "川", reading: "かわ" }]
+        kanji1: [
+{ kanji: "月", reading: "つき" },
+{ kanji: "四か月", reading: "よんかげつ" },
+{ kanji: "一月", reading: "いちがつ" },
+{ kanji: "十二月", reading: "じゅうにがつ" },
+{ kanji: "月曜日", reading: "げつようび" },
+{ kanji: "火", reading: "ひ" },
+{ kanji: "火曜日", reading: "かようび" },
+{ kanji: "水", reading: "みず" },
+{ kanji: "水曜日", reading: "すいようび" },
+{ kanji: "木", reading: "き" },
+{ kanji: "木曜日", reading: "もくようび" },
+{ kanji: "金", reading: "かね/きん" },
+{ kanji: "金曜日", reading: "きんようび" }
+        ],
+        kanji2: [
+{ kanji: "土", reading: "つち" },
+{ kanji: "土曜日", reading: "どようび" },
+{ kanji: "日", reading: "ひ" },
+{ kanji: "二日", reading: "ふつか" },
+{ kanji: "一日", reading: "いちにち" },
+{ kanji: "休日", reading: "きゅうじつ" },
+{ kanji: "一日", reading: "ついたち" },
+{ kanji: "日曜日", reading: "にちようび" },
+{ kanji: "本", reading: "ほん" },
+{ kanji: "日本", reading: "にほん" },
+{ kanji: "本部", reading: "ほんぶ" },
+{ kanji: "二万円", reading: "にまんえん" },
+{ kanji: "百万円", reading: "ひゃくまんえん" },
+{ kanji: "円", reading: "えん" },
+{ kanji: "十円", reading: "じゅうえん" },
+{ kanji: "五十円", reading: "ごじゅうえん" },
+{ kanji: "百円", reading: "ひゃくえん" },
+{ kanji: "七百円", reading: "ななひゃくえん" }
+        ],
+        kanji3: [
+{ kanji: "百", reading: "ひゃく" },
+{ kanji: "四百", reading: "よんひゃく" },
+{ kanji: "三百", reading: "さんびゃく" },
+{ kanji: "六百", reading: "ろっぴゃく" },
+{ kanji: "八百", reading: "はっぴゃく" },
+{ kanji: "二千", reading: "にせん" },
+{ kanji: "千円", reading: "せんえん" },
+{ kanji: "五千円", reading: "ごせんえん" },
+{ kanji: "三千", reading: "さんぜん" },
+{ kanji: "時", reading: "とき" },
+{ kanji: "六時", reading: "ろくじ" },
+{ kanji: "時間", reading: "じかん" },
+{ kanji: "日時", reading: "にちじ" },
+{ kanji: "分（る", reading: "わかる" },
+{ kanji: "分ける", reading: "わける" },
+{ kanji: "半分", reading: "はんぶん" },
+{ kanji: "九分", reading: "きゅうふん" },
+{ kanji: "四分", reading: "よんぷん" },
+{ kanji: "十一時半", reading: "じゅういちじはん" },
+{ kanji: "半日", reading: "はんにち" },
+{ kanji: "半年", reading: "はんとし" }
+        ],
+        kanji4: [
+{ kanji: "一つ", reading: "ひとつ" },
+{ kanji: "一", reading: "いち" },
+{ kanji: "二つ", reading: "ふたつ" },
+{ kanji: "二", reading: "に" },
+{ kanji: "三つ", reading: "みっつ" },
+{ kanji: "三", reading: "さん" },
+{ kanji: "四つ", reading: "よっつ" },
+{ kanji: "四", reading: "よん/し" },
+{ kanji: "五つ", reading: "いつつ" },
+{ kanji: "五", reading: "ご" },
+        ],
+        kanji5: [
+{ kanji: "六つ", reading: "むっつ" },
+{ kanji: "六", reading: "ろく" },
+{ kanji: "七つ", reading: "ななつ" },
+{ kanji: "七", reading: "なな/しち" },
+{ kanji: "八つ", reading: "やっつ" },
+{ kanji: "八", reading: "はち" },
+{ kanji: "九つ", reading: "ここのつ" },
+{ kanji: "九", reading: "きゅう/く" },
+{ kanji: "十", reading: "とお/じゅう" },
+{ kanji: "十一", reading: "じゅういち" },
+{ kanji: "三十", reading: "さんじゅう" },
+        ],
+        kanji6: [
+{ kanji: "手", reading: "て" },
+{ kanji: "手紙", reading: "てがみ" },
+{ kanji: "歌手", reading: "かしゅ" },
+{ kanji: "上手", reading: "じょうず" },
+{ kanji: "父", reading: "ちち" },
+{ kanji: "お父さん", reading: "おとうさん" },
+{ kanji: "父親", reading: "ちちおや" },
+{ kanji: "父母", reading: "ふぼ" },
+{ kanji: "母", reading: "はは" },
+{ kanji: "お母さん", reading: "おかあさん" },
+{ kanji: "母親", reading: "ははおや" },
+{ kanji: "母国", reading: "ぼこく" },
+{ kanji: "私", reading: "わたし/わたくし" },
+{ kanji: "私立大学", reading: "しりつだいがく" },
+{ kanji: "花", reading: "はな" },
+{ kanji: "花火", reading: "はなび" },
+{ kanji: "花びん", reading: "かびん" }
+        ],
+        kanji7: [
+{ kanji: "大きい", reading: "おおきい" },
+{ kanji: "大きな", reading: "おおきな" },
+{ kanji: "大人", reading: "おとな" },
+{ kanji: "大学", reading: "だいがく" },
+{ kanji: "大切", reading: "たいせつ" },
+{ kanji: "小さい", reading: "ちいさい" },
+{ kanji: "小さな", reading: "ちいさな" },
+{ kanji: "小人", reading: "こども" },
+{ kanji: "小川", reading: "おがわ" },
+{ kanji: "小学校", reading: "しょうがっこう" },
+{ kanji: "新しい", reading: "あたらしい" },
+{ kanji: "新車", reading: "しんしゃ" },
+{ kanji: "新聞", reading: "しんぶん" },
+{ kanji: "新年", reading: "しんねん" },
+{ kanji: "古い", reading: "ふるい" },
+{ kanji: "古本", reading: "ふるほん" },
+{ kanji: "中古車", reading: "ちゅうこしゃ" },
+{ kanji: "新聞", reading: "しんぶん" }
+        ],
+        kanji8: [
+{ kanji: "上", reading: "うえ" },
+{ kanji: "上がる", reading: "あがる" },
+{ kanji: "上り", reading: "のぼり" },
+{ kanji: "上手", reading: "じょうず" },
+{ kanji: "下", reading: "した" },
+{ kanji: "下がる", reading: "さがる" },
+{ kanji: "地下", reading: "ちか" },
+{ kanji: "下車する", reading: "げしゃする" },
+{ kanji: "安い", reading: "やすい" },
+{ kanji: "安売り", reading: "やすうり" },
+{ kanji: "安心する", reading: "あんしんする" },
+{ kanji: "安全", reading: "あんぜん" },
+{ kanji: "高い", reading: "たかい" },
+{ kanji: "高校", reading: "こうこう" },
+{ kanji: "高橋", reading: "たかはし" },
+{ kanji: "高速", reading: "こうそく" },
+{ kanji: "好きな", reading: "すきな" },
+{ kanji: "好かれる", reading: "すかれる" },
+{ kanji: "好物", reading: "こうぶつ" }
+        ],
+        kanji9: [
+{ kanji: "女", reading: "おんな" },
+{ kanji: "男女", reading: "だんじょ" },
+{ kanji: "男", reading: "おとこ" },
+{ kanji: "間", reading: "あいだ" },
+{ kanji: "日本間", reading: "にほんま" },
+{ kanji: "人間", reading: "にんげん" },
+{ kanji: "時間", reading: "じかん" },
+{ kanji: "右", reading: "みぎ" },
+{ kanji: "右手", reading: "みぎて" },
+{ kanji: "左右確認", reading: "さゆうかくにん" },
+{ kanji: "左", reading: "ひだり" },
+{ kanji: "左手", reading: "ひだりて" }
+        ],
+        kanji10: [
+{ kanji: "人", reading: "ひと" },
+{ kanji: "人", reading: "ひとり" },
+{ kanji: "日本人", reading: "にほんじん" },
+{ kanji: "３人", reading: "さんにん" },
+{ kanji: "国", reading: "くに" },
+{ kanji: "外国人", reading: "がいこくじん" },
+{ kanji: "国立大学", reading: "こくりつだいがく" },
+{ kanji: "外", reading: "そと" },
+{ kanji: "外国", reading: "がいこく" },
+{ kanji: "外出する", reading: "がいしゅつする" },
+{ kanji: "外科", reading: "げか" },
+{ kanji: "中", reading: "なか" },
+{ kanji: "中学校", reading: "ちゅうがっこう" },
+{ kanji: "一日中", reading: "いちにちじゅう" },
+{ kanji: "中国", reading: "ちゅうごく" },
+{ kanji: "休む", reading: "やすむ" },
+{ kanji: "休み", reading: "やすみ" },
+{ kanji: "休日", reading: "きゅうじつ" }
+        ],
+        kanji11: [
+{ kanji: "多い", reading: "おおい" },
+{ kanji: "多少", reading: "たしょう" },
+{ kanji: "多数", reading: "たずう" },
+{ kanji: "少ない", reading: "すくない" },
+{ kanji: "少し", reading: "すこし" },
+{ kanji: "少年", reading: "しょうねん" },
+{ kanji: "少女", reading: "しょうじょ" },
+{ kanji: "大学", reading: "だいがく" },
+{ kanji: "学年", reading: "がくねん" },
+{ kanji: "先生", reading: "せんせい" },
+{ kanji: "先週", reading: "せんしゅう" },
+{ kanji: "先月", reading: "せんげつ" },
+{ kanji: "生まれる", reading: "うまれる" },
+{ kanji: "生きる", reading: "いきる" },
+{ kanji: "学生", reading: "がくせい" },
+{ kanji: "生年月日", reading: "せいねんがっぴ" },
+{ kanji: "大学生", reading: "だいがくせい" },
+{ kanji: "生活", reading: "せいかつ" },
+{ kanji: "人生", reading: "じんせい" },
+{ kanji: "一年生", reading: "いちねんせい" },
+{ kanji: "誕生日", reading: "たんじょうび" }
+        ],
+        kanji12: [
+{ kanji: "子ども", reading: "こども" },
+{ kanji: "男の子", reading: "おとこのこ" },
+{ kanji: "男子", reading: "だんし" },
+{ kanji: "女子", reading: "じょし" },
+{ kanji: "何時", reading: "なんじ" },
+{ kanji: "何時間", reading: "なんじかん" },
+{ kanji: "何分", reading: "なんぷん" },
+{ kanji: "何曜日", reading: "なんようび" },
+{ kanji: "何日", reading: "なんにち" },
+{ kanji: "何月", reading: "なんがつ" },
+{ kanji: "何人", reading: "なんにん" },
+{ kanji: "何年", reading: "なんねん" },
+{ kanji: "食べる", reading: "たべる" },
+{ kanji: "食堂", reading: "しょくどう" },
+{ kanji: "食事する", reading: "しょくじする" },
+{ kanji: "定食", reading: "ていしょく" },
+{ kanji: "食券", reading: "しょっけん" },
+{ kanji: "飲む", reading: "のむ" },
+{ kanji: "飲み物", reading: "のみもの" },
+{ kanji: "飲み水", reading: "のみみず" },
+{ kanji: "飲料水", reading: "いんりょうすい" },
+{ kanji: "書く", reading: "かく" },
+{ kanji: "申込書", reading: "もうしこみしょ" },
+        ],
+        kanji13: [
+{ kanji: "見る", reading: "みる" },
+{ kanji: "見本", reading: "みほん" },
+{ kanji: "見学する", reading: "けんがくする" },
+{ kanji: "意見", reading: "いけん" },
+{ kanji: "読む", reading: "よむ" },
+{ kanji: "読み", reading: "よみ" },
+{ kanji: "読書", reading: "どくしょ" },
+{ kanji: "読者", reading: "どくしゃ" },
+{ kanji: "日本語", reading: "にほんご" },
+{ kanji: "英語", reading: "えいご" },
+{ kanji: "中国語", reading: "ちゅうごくご" },
+{ kanji: "物語", reading: "ものがたり" },
+{ kanji: "入る", reading: "はいる" },
+{ kanji: "入れる", reading: "いれる" },
+{ kanji: "入口", reading: "いりぐち" },
+{ kanji: "入学する", reading: "にゅうがくする" },
+{ kanji: "出る", reading: "でる" },
+{ kanji: "出す", reading: "だす" },
+{ kanji: "出口", reading: "でぐち" },
+{ kanji: "外出する", reading: "がいしゅつする" }
+        ],
+        kanji14: [
+{ kanji: "体", reading: "からだ" },
+{ kanji: "体力", reading: "たいりょく" },
+{ kanji: "体育", reading: "たいいく" },
+{ kanji: "足りる", reading: "たりる" },
+{ kanji: "足す", reading: "たす" },
+{ kanji: "足", reading: "あし" },
+{ kanji: "二足", reading: "にそく" },
+{ kanji: "目上", reading: "めうえ" },
+{ kanji: "目下", reading: "めした" },
+{ kanji: "目", reading: "め" },
+{ kanji: "目次", reading: "もくじ" },
+{ kanji: "耳", reading: "みみ" },
+{ kanji: "耳鼻科", reading: "じびか" },
+{ kanji: "口", reading: "くち" },
+{ kanji: "入口", reading: "いりぐち" },
+{ kanji: "出口", reading: "でぐち" },
+{ kanji: "人口", reading: "じんこう" }
+        ],
+        kanji15: [
+{ kanji: "行く", reading: "いく" },
+{ kanji: "行う", reading: "おこなう" },
+{ kanji: "旅行する", reading: "りょこうする" },
+{ kanji: "二行目", reading: "にぎょうめ" },
+{ kanji: "来る", reading: "くる" },
+{ kanji: "来年", reading: "らいねん" },
+{ kanji: "来月", reading: "らいげつ" },
+{ kanji: "来日する", reading: "らいにちする" },
+{ kanji: "会う", reading: "あう" },
+{ kanji: "会社", reading: "かいしゃ" },
+{ kanji: "会話", reading: "かいわ" },
+{ kanji: "教会", reading: "きょうかい" },
+{ kanji: "話す", reading: "はなす" },
+{ kanji: "話", reading: "はなし" },
+{ kanji: "会話", reading: "かいわ" },
+{ kanji: "電話", reading: "でんわ" },
+{ kanji: "会社", reading: "かいしゃ" },
+{ kanji: "社会", reading: "しゃかい" },
+{ kanji: "社長", reading: "しゃちょう" },
+{ kanji: "神社", reading: "じんじゃ" }
+        ],
+        kanji16: [
+{ kanji: "前", reading: "まえ" },
+{ kanji: "～年前", reading: "ねんまえ" },
+{ kanji: "前半", reading: "ぜんはん" },
+{ kanji: "後", reading: "あと" },
+{ kanji: "後", reading: "うしろ" },
+{ kanji: "～年後", reading: "ねんご" },
+{ kanji: "後半", reading: "こうはん" },
+{ kanji: "午前", reading: "ごぜん" },
+{ kanji: "午後", reading: "ごご" },
+{ kanji: "正午", reading: "しょうご" },
+{ kanji: "名前", reading: "なまえ" },
+{ kanji: "名古屋", reading: "なごや" },
+{ kanji: "名所", reading: "めいしょ" },
+{ kanji: "名字", reading: "みょうじ" },
+{ kanji: "年", reading: "とし" },
+{ kanji: "年上", reading: "としうえ" },
+{ kanji: "去年", reading: "きょねん" },
+{ kanji: "来年", reading: "らいねん" }
+        ],
+        kanji17: [
+{ kanji: "山", reading: "やま" },
+{ kanji: "山下", reading: "やました" },
+{ kanji: "富士山", reading: "ふじさん" },
+{ kanji: "火山", reading: "かざん" },
+{ kanji: "川", reading: "かわ" },
+{ kanji: "小川", reading: "おがわ" },
+{ kanji: "ナイル川", reading: "がわ" },
+{ kanji: "立つ", reading: "たつ" },
+{ kanji: "立入禁止", reading: "たちいりきんし" },
+{ kanji: "国立", reading: "こくりつ" },
+{ kanji: "市立", reading: "しりつ" },
+{ kanji: "元気", reading: "げんき" },
+{ kanji: "元日", reading: "がんじつ" },
+{ kanji: "元", reading: "もと" },
+{ kanji: "気持ち", reading: "きもち" },
+{ kanji: "天気", reading: "てんき" },
+{ kanji: "気分", reading: "きぶん" },
+{ kanji: "病気", reading: "びょうき" }
+        ],
+        kanji18: [
+{ kanji: "車", reading: "くるま" },
+{ kanji: "電車", reading: "でんしゃ" },
+{ kanji: "自動車", reading: "じどうしゃ" },
+{ kanji: "水車", reading: "すいしゃ" },
+{ kanji: "今", reading: "いま" },
+{ kanji: "今月", reading: "こんげつ" },
+{ kanji: "今年", reading: "ことし" },
+{ kanji: "今日", reading: "きょう/こんにち" },
+{ kanji: "物", reading: "もの" },
+{ kanji: "買い物", reading: "かいもの" },
+{ kanji: "生物", reading: "せいぶつ" },
+{ kanji: "荷物", reading: "にもつ" },
+{ kanji: "買う", reading: "かう" },
+{ kanji: "買い物", reading: "かいもの" },
+{ kanji: "電気", reading: "でんき" },
+{ kanji: "電話", reading: "でんわ" },
+{ kanji: "電車", reading: "でんしゃ" }
+        ],
+        kanji19: [
+{ kanji: "力", reading: "ちから" },
+{ kanji: "力学", reading: "りきがく" },
+{ kanji: "水力", reading: "すいりょく" },
+{ kanji: "火力", reading: "かりょく" },
+{ kanji: "雨", reading: "あめ" },
+{ kanji: "大雨", reading: "おおあめ" },
+{ kanji: "雨天", reading: "うてん" },
+{ kanji: "友", reading: "とも" },
+{ kanji: "友達", reading: "ともだち" },
+{ kanji: "友人", reading: "ゆうじん" },
+{ kanji: "親友", reading: "しんゆう" },
+{ kanji: "友情", reading: "ゆうじょう" },
+{ kanji: "書き方", reading: "かきかた" },
+{ kanji: "方法", reading: "ほうほう" },
+{ kanji: "夕方", reading: "ゆうがた" },
+{ kanji: "言う", reading: "いう" },
+{ kanji: "言葉", reading: "ことば" },
+{ kanji: "言語", reading: "げんご" },
+{ kanji: "伝言", reading: "でんごん" }
+        ],
+        kanji20: [
+{ kanji: "お茶", reading: "おちゃ" },
+{ kanji: "日本茶", reading: "にほんちゃ" },
+{ kanji: "紅茶", reading: "こうちゃ" },
+{ kanji: "喫茶店", reading: "きっさてん" },
+{ kanji: "魚", reading: "さかな" },
+{ kanji: "魚屋", reading: "さかなや" },
+{ kanji: "焼き魚", reading: "やきざかな" },
+{ kanji: "金魚", reading: "きんぎょ" },
+{ kanji: "石", reading: "いし" },
+{ kanji: "石川", reading: "いしかわ" },
+{ kanji: "石油", reading: "せきゆ" },
+{ kanji: "化石", reading: "かせき" },
+{ kanji: "牛", reading: "うし" },
+{ kanji: "牛肉", reading: "ぎゅうにく" },
+{ kanji: "子牛", reading: "こうし" },
+{ kanji: "牛乳", reading: "ぎゅうにゅう" },
+{ kanji: "鳥", reading: "とり" },
+{ kanji: "白鳥", reading: "はくちょう" },
+{ kanji: "焼き鳥", reading: "やきとり" },
+{ kanji: "野鳥", reading: "やちょう" }
+        ],
+        kanji21: [
+{ kanji: "長い", reading: "ながい" },
+{ kanji: "長男", reading: "ちょうなん" },
+{ kanji: "学長", reading: "がくちょう" },
+{ kanji: "明るい", reading: "あかるい" },
+{ kanji: "明日", reading: "あした" },
+{ kanji: "明ける", reading: "あける" },
+{ kanji: "説明する", reading: "せつめいする" },
+{ kanji: "暗い", reading: "くらい" },
+{ kanji: "暗室", reading: "あんしつ" },
+{ kanji: "学校", reading: "がっこう" },
+{ kanji: "校長", reading: "こうちょう" },
+{ kanji: "高校生", reading: "こうこうせい" },
+{ kanji: "帰る", reading: "かえる" },
+{ kanji: "帰国する", reading: "きこくする" },
+{ kanji: "帰す", reading: "かえす" },
+        ],
+        kanji22: [
+{ kanji: "夕方", reading: "ゆうがた" },
+{ kanji: "夕食", reading: "ゆうしょく" },
+{ kanji: "夕飯", reading: "ゆうはん" },
+{ kanji: "岩", reading: "いわ" },
+{ kanji: "岩山", reading: "いわやま" },
+{ kanji: "竹", reading: "たけ" },
+{ kanji: "竹の子", reading: "たけのこ" },
+{ kanji: "貝", reading: "かい" },
+{ kanji: "貝殻", reading: "かいがら" },
+{ kanji: "牛肉", reading: "ぎゅうにく" },
+{ kanji: "鶏肉", reading: "とりにく" },
+{ kanji: "豚肉", reading: "ぶたにく" },
+{ kanji: "焼肉", reading: "やきにく" }
+        ],
+        kanji23: [
+{ kanji: "田", reading: "た" },
+{ kanji: "山田", reading: "やまだ" },
+{ kanji: "田中", reading: "たなか" },
+{ kanji: "水田", reading: "すいでん" },
+{ kanji: "米", reading: "こめ" },
+{ kanji: "米国", reading: "べいこく" },
+{ kanji: "新米", reading: "しんまい" },
+{ kanji: "中米", reading: "ちゅうべい" },
+{ kanji: "林", reading: "はやし" },
+{ kanji: "林業", reading: "りんぎょう" },
+{ kanji: "小林", reading: "こばやし" },
+{ kanji: "森", reading: "もり" },
+{ kanji: "森林", reading: "しんりん" },
+{ kanji: "森田", reading: "もりた" },
+{ kanji: "町", reading: "まち" },
+{ kanji: "町長", reading: "ちょうちょう" },
+{ kanji: "下町", reading: "したまち" }
+        ],
+        kanji24: [
+{ kanji: "寺", reading: "てら" },
+{ kanji: "東大寺", reading: "とうだいじ" },
+{ kanji: "東", reading: "ひがし" },
+{ kanji: "東口", reading: "ひがしぐち" },
+{ kanji: "東京", reading: "とうきょう" },
+{ kanji: "関東", reading: "かんとう" },
+{ kanji: "西", reading: "にし" },
+{ kanji: "西口", reading: "にしぐち" },
+{ kanji: "西洋", reading: "せいよう" },
+{ kanji: "関西", reading: "かんさい" },
+{ kanji: "北", reading: "きた" },
+{ kanji: "北口", reading: "きたぐち" },
+{ kanji: "北米", reading: "ほくべい" },
+{ kanji: "北海道", reading: "ほっかいどう" },
+{ kanji: "南", reading: "みなみ" },
+{ kanji: "南口", reading: "みなみぐち" },
+{ kanji: "南米", reading: "なんべい" },
+{ kanji: "南北", reading: "なんぼく" }
+        ],
+        
       },
       vocabSets: {
         vocab1: [
@@ -1765,12 +2221,12 @@ kanjiSets: {
     },
     n3: {
       kanjiSets: {
-        kanji1: [{ kanji: "橋", reading: "はし" }, { kanji: "線", reading: "せん" }],
-        kanji2: [{ kanji: "港", reading: "みなと" }, { kanji: "湖", reading: "みずうみ" }]
+        kanji1: [],
+        kanji2: []
       },
       vocabSets: {
-        vocab1: [{ kanji: "飛行機", reading: "ひこうき" }, { kanji: "空港", reading: "くうこう" }],
-        vocab2: [{ kanji: "地図", reading: "ちず" }, { kanji: "地下鉄", reading: "ちかてつ" }]
+        vocab1: [],
+        vocab2: []
       }
     }
   };
