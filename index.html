@@ -46,39 +46,35 @@
       display: none;
     }
 
-.checkbox-group {
-  display: grid; /* was flex */
-  grid-template-columns: repeat(5, 1fr); /* 5 equal columns */
-  gap: 10px;
-  margin-bottom: 20px;
-  color: white;
-  font-size: 1.2em;
-  justify-items: center;
-}
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+      color: white;
+      font-size: 1.2em;
+      justify-items: center;
+    }
 
-/* Center the "All" checkbox above columns */
-.checkbox-all {
-  grid-column: 1 / -1;
-  justify-self: center;
-  font-weight: bold;
-}
+    .checkbox-all {
+      grid-column: 1 / -1;
+      justify-self: center;
+      font-weight: bold;
+    }
 
-
-   .kanji {
-  font-size: 6em;
-  margin: 20px;
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-
-  /* allow long text to wrap nicely */
-  max-width: 90%;
-  word-wrap: break-word;
-  white-space: normal;
-  text-align: center;
-}
+    .kanji {
+      font-size: 6em;
+      margin: 20px;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      max-width: 90%;
+      word-wrap: break-word;
+      white-space: normal;
+      text-align: center;
+    }
 
     .vocab-question {
-      font-size: 1.5em; /* 200% smaller than kanji */
+      font-size: 0.75em; /* reduced twice */
     }
 
     .choices {
@@ -98,8 +94,14 @@
       transition: background-color 0.2s;
     }
 
-    .choice-option:hover {
-      background-color: #f0f0f0;
+    .choice-option.correct {
+      background-color: #4CAF50 !important; /* green */
+      color: white;
+    }
+
+    .choice-option.wrong {
+      background-color: #f44336 !important; /* red */
+      color: white;
     }
 
     .score, .feedback {
@@ -107,23 +109,6 @@
       font-size: 1.2em;
       color: white;
     }
-
-    /*　Style for checkbox grid */
-.checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr); /* 5 columns */
-  gap: 10px;
-  max-width: 600px;
-  margin: 0 auto; /* center the grid */
-  text-align: left;
-}
-
-.all-checkbox {
-  text-align: center;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
   </style>
 </head>
 <body>
@@ -162,7 +147,7 @@
   </div>
 
 <script>
-  //Data organized by level -> category
+  // Data placeholder
   const data = {
     n5: {
       kanjiSets: {
@@ -2274,6 +2259,9 @@ kanjiSets: {
   let answered = [];
   let shuffledQuestions = [];
   let currentQuestion = {};
+  let universalPool = []; // universal pool for options
+
+  const specialEndings = ["する", "い", "く"];
 
   function selectLevel(level) {
     currentLevel = level;
@@ -2288,38 +2276,34 @@ kanjiSets: {
     buildCheckboxes();
   }
 
-function buildCheckboxes() {
-  const container = document.getElementById("checkboxContainer");
-  container.innerHTML = "";
+  function buildCheckboxes() {
+    const container = document.getElementById("checkboxContainer");
+    container.innerHTML = "";
 
-  const sets = data[currentLevel][currentCategory + "Sets"];
+    const sets = data[currentLevel][currentCategory + "Sets"];
 
-  // ✅ "All" checkbox centered above columns
-  container.innerHTML += `
-    <label class="checkbox-all">
-      <input type="checkbox" id="all" onchange="toggleAll(this)">
-      All${currentCategory === "kanji" ? ` (${currentLevel.toUpperCase()})` : ""}
-    </label>
-  `;
-
-  // ✅ Generate checkboxes dynamically
-  Object.keys(sets).forEach((key, i) => {
-    let label;
-    if (currentCategory === "kanji") {
-      label = `${currentLevel.toUpperCase()} Week ${i + 1}`;
-    } else {
-      const lessonNumber = currentLevel === "n4" ? 26 + i : i + 1;
-      label = `Lesson ${lessonNumber}`;
-    }
     container.innerHTML += `
-      <label>
-        <input type="checkbox" class="setBox" value="${key}"> ${label}
+      <label class="checkbox-all">
+        <input type="checkbox" id="all" onchange="toggleAll(this)">
+        All${currentCategory === "kanji" ? ` (${currentLevel.toUpperCase()})` : ""}
       </label>
     `;
-  });
-}
 
-
+    Object.keys(sets).forEach((key, i) => {
+      let label;
+      if (currentCategory === "kanji") {
+        label = `${currentLevel.toUpperCase()} Week ${i + 1}`;
+      } else {
+        const lessonNumber = currentLevel === "n4" ? 26 + i : i + 1;
+        label = `Lesson ${lessonNumber}`;
+      }
+      container.innerHTML += `
+        <label>
+          <input type="checkbox" class="setBox" value="${key}"> ${label}
+        </label>
+      `;
+    });
+  }
 
   function toggleAll(allBox) {
     document.querySelectorAll(".setBox").forEach(cb => cb.checked = allBox.checked);
@@ -2331,6 +2315,9 @@ function buildCheckboxes() {
     document.querySelectorAll(".setBox:checked").forEach(cb => {
       mainArray.push(...sets[cb.value]);
     });
+
+    // build universal pool depending on category
+    universalPool = Object.values(data[currentLevel][currentCategory + "Sets"]).flat();
   }
 
   function startFromCheckbox() {
@@ -2376,11 +2363,23 @@ function buildCheckboxes() {
       kanjiDiv.classList.remove("vocab-question");
     }
 
-    const otherReadings = shuffle(mainArray.filter(k => k.reading !== currentQuestion.reading));
+    // build distractors using universal pool
+    let distractors = universalPool.filter(k => k.reading !== currentQuestion.reading);
+
+    // apply special rules for Kanji
+    if (currentCategory === "kanji") {
+      let ending = specialEndings.find(e => currentQuestion.reading.endsWith(e));
+      if (ending) {
+        distractors = distractors.filter(k => k.reading.endsWith(ending));
+      } else {
+        const len = currentQuestion.reading.length;
+        distractors = distractors.filter(k => Math.abs(k.reading.length - len) <= 2);
+      }
+    }
+
     const options = shuffle([
       currentQuestion.reading,
-      otherReadings[0]?.reading || currentQuestion.reading,
-      otherReadings[1]?.reading || currentQuestion.reading
+      ...(shuffle(distractors).slice(0, 2).map(k => k.reading))
     ]);
 
     const choicesDiv = document.getElementById("choices");
@@ -2389,24 +2388,37 @@ function buildCheckboxes() {
       const btn = document.createElement("button");
       btn.textContent = option;
       btn.classList.add("choice-option");
-      btn.onclick = () => checkAnswer(option);
+      btn.onclick = () => checkAnswer(option, btn);
       choicesDiv.appendChild(btn);
     });
   }
 
-  function checkAnswer(answer) {
+  function checkAnswer(answer, btn) {
+    const buttons = document.querySelectorAll(".choice-option");
+
     if (answer === currentQuestion.reading) {
       score++;
       if (!answered.includes(currentQuestion.kanji)) answered.push(currentQuestion.kanji);
       document.getElementById("feedback").textContent = "Correct!";
       document.getElementById("score").textContent = `Score: ${score}`;
+      btn.classList.add("correct");
     } else {
       document.getElementById("feedback").textContent = `Wrong! Correct was: ${currentQuestion.reading}`;
+      btn.classList.add("wrong");
+      // highlight correct one
+      buttons.forEach(b => {
+        if (b.textContent === currentQuestion.reading) {
+          b.classList.add("correct");
+        }
+      });
     }
+
+    buttons.forEach(b => b.disabled = true);
+
     setTimeout(() => {
       document.getElementById("feedback").textContent = "";
       pickQuestion();
-    }, 1000); // ✅ 0.5s for both
+    }, 1000);
   }
 
   function shuffle(array) {
@@ -2434,6 +2446,3 @@ function buildCheckboxes() {
 </script>
 </body>
 </html>
-
-
-
